@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# fnOS reliably exposes wizard_* values to lifecycle callbacks. Persist the
+# chosen service port so install, later configuration, restart, and upgrade
+# all use the same listener without putting a port on the gateway entry.
+
+port_config_file() {
+    if [ -n "${TRIM_PKGETC}" ]; then
+        printf "%s/service_port" "${TRIM_PKGETC}"
+    elif [ -n "${TRIM_PKGVAR}" ]; then
+        printf "%s/service_port" "${TRIM_PKGVAR}"
+    else
+        printf "%s" "./service_port"
+    fi
+}
+
+is_valid_port() {
+    case "$1" in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+    [ "$1" -ge 1024 ] 2>/dev/null && [ "$1" -le 65535 ] 2>/dev/null
+}
+
+stored_port() {
+    local file value
+    file="$(port_config_file)"
+    if [ -r "${file}" ]; then
+        value="$(head -n 1 "${file}" | tr -d '[:space:]')"
+        if is_valid_port "${value}"; then
+            printf "%s" "${value}"
+            return 0
+        fi
+    fi
+    if is_valid_port "${TRIM_SERVICE_PORT:-}"; then
+        printf "%s" "${TRIM_SERVICE_PORT}"
+    else
+        printf "%s" "8907"
+    fi
+}
+
+resolve_port() {
+    if is_valid_port "${1:-}"; then
+        printf "%s" "$1"
+    else
+        stored_port
+    fi
+}
+
+runtime_port() {
+    local file
+    file="$(port_config_file)"
+    if [ -r "${file}" ]; then
+        stored_port
+    else
+        resolve_port "${wizard_service_port:-}"
+    fi
+}
+
+save_port() {
+    local port file directory temporary
+    port="$(resolve_port "${1:-}")"
+    file="$(port_config_file)"
+    directory="$(dirname "${file}")"
+    mkdir -p "${directory}"
+    temporary="${file}.tmp"
+    printf "%s\n" "${port}" > "${temporary}"
+    mv -f "${temporary}" "${file}"
+    printf "%s" "${port}"
+}
+
+configure_port() {
+    save_port "${1:-}" >/dev/null
+}

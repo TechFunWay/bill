@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@import './styles/themes.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+
+button,
+a,
+select,
+label[for] {
+  touch-action: manipulation;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgb(var(--color-brand-500) / 0.45);
+  outline-offset: 2px;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply text-foreground;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: rgb(var(--color-background));
+  background-image:
+    linear-gradient(rgb(var(--color-foreground) / 0.022) 1px, transparent 1px);
+  background-size: 100% 32px;
+  background-attachment: fixed;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark body {
+  background-image:
+    linear-gradient(rgb(var(--color-foreground) / 0.035) 1px, transparent 1px);
+  background-size: 100% 32px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full border-2 border-transparent bg-clip-content;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+@layer components {
+  .surface {
+    @apply min-w-0 border border-border bg-surface shadow-card;
+  }
+
+  .btn-brand {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-800 px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all duration-200 hover:bg-brand-700 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60 dark:bg-accent dark:text-brand-900 dark:hover:brightness-95;
+  }
+
+  .btn-ghost {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-bold text-foreground transition-all duration-200 hover:border-brand-400 hover:bg-brand-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-muted;
+  }
+
+  .input-field {
+    @apply min-h-12 w-full rounded-2xl border border-input bg-surface px-4 py-2.5 text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+
+  /* Page-level container — uses the full available width so authenticated
+     views (especially tables) don't waste space once a sidebar is present. */
+  .page-container {
+    @apply min-w-0 w-full space-y-5 sm:space-y-6;
+  }
+
+  .money-card {
+    @apply surface flex min-h-28 flex-col rounded-[1.25rem] p-4 sm:min-h-36 sm:p-6;
+  }
+
+  .money-card-primary {
+    border-color: rgb(var(--color-balance-border));
+    background-color: rgb(var(--color-balance));
+    color: rgb(var(--color-balance-foreground));
+  }
+
+  .money-label {
+    @apply text-xs font-semibold text-muted-foreground sm:text-sm;
+  }
+
+  .money-card-primary .money-label,
+  .money-card-primary .money-meta {
+    color: rgb(var(--color-balance-muted));
+  }
+
+  .money-value {
+    @apply mt-2 break-words font-mono text-lg font-semibold tracking-tight tabular-nums sm:mt-3 sm:text-3xl;
+  }
+
+  .money-meta {
+    @apply mt-auto pt-2 text-[10px] text-muted-foreground sm:text-xs;
+  }
+
+  .money-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-full bg-muted;
+  }
+
+  .money-icon svg {
+    @apply h-5 w-5;
+  }
+
+  .money-card-primary .money-icon {
+    background-color: rgb(var(--color-balance-foreground) / .1);
+    color: rgb(var(--color-balance-foreground));
+  }
+
+  .form-field,
+  .filter-field {
+    @apply block space-y-1.5;
+  }
+
+  .form-field > span,
+  .filter-field > span {
+    @apply block text-sm font-semibold text-foreground;
+  }
+
+  .form-field small {
+    @apply font-normal text-muted-foreground;
+  }
+
+  .filter-field > span {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .empty-state {
+    @apply flex flex-col items-center justify-center px-6 text-sm text-muted-foreground;
+  }
+
+  .data-table {
+    @apply w-full min-w-[720px] border-collapse;
+  }
+
+  .data-table th {
+    @apply border-b border-border bg-muted/55 px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .data-table td {
+    @apply border-b border-border px-5 py-4;
+  }
+
+  .data-table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-muted/40;
+  }
+
+  .icon-button {
+    @apply flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground;
+  }
+
+  .icon-button svg {
+    @apply h-5 w-5;
+  }
+
+  .avatar {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-extrabold text-brand-900;
+  }
+
+  .chart-tooltip {
+    @apply pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-foreground px-2 py-1 text-[10px] text-background shadow-lg group-hover:block;
+  }
+
+  /* Premium gradient button with a light sweep on hover */
+  .btn-premium {
+    @apply relative flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-brand-800 px-4 py-3 font-bold text-white shadow-glow transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 dark:bg-accent dark:text-brand-900;
+  }
+  .btn-premium::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 80%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: skewX(-18deg);
+    transition: left 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-premium:hover::after {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", system-ui, sans-serif;
+  }
+
+  .font-display {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", system-ui, sans-serif;
+  }
+
+  .page-container {
+    @apply space-y-3;
+  }
+
+  .surface {
+    box-shadow: 0 1px 0 rgb(var(--color-foreground) / .035), 0 8px 24px -22px rgb(var(--color-foreground) / .5);
+  }
+
+  .money-card {
+    min-height: 7rem;
+    padding: 1rem;
+  }
+
+  .money-value {
+    margin-top: .5rem;
+    font-size: 1.125rem;
+  }
+
+  .money-meta {
+    font-size: .625rem;
+  }
+
+  .btn-brand,
+  .btn-ghost {
+    @apply min-h-11 px-4;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  button:active,
+  a:active {
+    opacity: .78;
+  }
+}

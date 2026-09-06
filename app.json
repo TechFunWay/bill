@@ -1,0 +1,21 @@
+{
+  "appname": "techfunway-bill",
+  "display_name": "账单",
+  "version": "0.1.2",
+  "desc": "个人与多人共享账单、分摊与结算工具，支持图片附件与飞牛 NAS 账号登录",
+  "author": "TechFunWay",
+  "website": "https://techfunway.wycto.cn",
+  "port": 8907,
+  "docker": {
+    "image": "techfunways/bill",
+    "container": "techfunway-bill",
+    "tag_prefix": "bill"
+  },
+  "fnos": {
+    "os_min_version": "1.0.0",
+    "service_port": 8907,
+    "ctl_stop": true,
+    "checkport": false,
+    "disable_authorization_path": false
+  }
+}

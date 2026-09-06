@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#252d5b" />
+    <meta name="description" content="账单 — 个人与多人共享账单、分摊与结算工具，支持图片附件与飞牛 NAS 账号登录" />
+    <title>账单</title>
+    <script>
+      // Apply the saved theme BEFORE any CSS or Vue mounts so the first paint
+      // already reflects the user's choice — otherwise a system-default
+      // light flash cuts in before Pinia's theme store runs apply().
+      (function () {
+        try {
+          var themeVersion = '2';
+          var mode;
+          if (localStorage.getItem('bill-theme-version') !== themeVersion) {
+            mode = 'light';
+            localStorage.setItem('bill-theme-version', themeVersion);
+            localStorage.setItem('bill-theme-mode', mode);
+          } else {
+            mode = localStorage.getItem('bill-theme-mode') || 'light';
+          }
+          var brand = localStorage.getItem('bill-theme-brand') || localStorage.getItem('smallgo-theme-brand') || 'default';
+          var dark = mode === 'dark' ||
+            (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.classList.toggle('dark', dark);
+          if (brand !== 'default') root.classList.add('brand-' + brand);
+        } catch (e) { /* private mode or storage off — fall back to defaults */ }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

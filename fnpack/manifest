@@ -1,0 +1,36 @@
+appname                    = techfunway-bill
+version                    = 0.1.2
+display_name               = 账单
+desc                       = """
+面向个人、家庭、合租、旅行和小团队的账单管理应用，支持多账本、收支账户、二级分类、多标签、图片附件、统计分析，以及多人共享记账、灵活分摊和补差结算，支持飞牛 NAS 账号登录。
+"""
+source                     = thirdparty
+platform                   = x86
+maintainer                 = 科技智趣坊
+maintainer_url             = https://github.com/TechFunWay/bill
+distributor                = 科技智趣坊
+distributor_url            = https://techfunway.wycto.cn
+os_min_version             = 1.0.0
+ctl_stop                   = true
+desktop_uidir              = ui
+desktop_applaunchname      = techfunway-bill.main
+service_port               = 8907
+checkport                  = false
+disable_authorization_path = false
+changelog                  = """
+v0.1.2：
+- 飞牛 NAS 授权改为注册页或登录页手动点击，并经账号确认后才继续绑定
+v0.1.1：
+- 安装、升级和运行设置均支持自定义服务端口，默认 8907
+- 支持飞牛 NAS 授权登录、首次创建管理员绑定和已有账号验证绑定
+- 应用入口改为飞牛 URL 网关新页面，确保 NAS 身份仅由可信网关传递
+- 银行卡卡号支持暂不填写、稍后补充，仅保存指纹与尾号
+- 支持记住登录，可配置登录有效天数
+- 个人与共享账单支持多图片附件上传、预览与下载
+- 移动端界面适配与筛选交互优化
+v0.1.0：
+- 支持多个个人账本、收支账户、二级分类与多标签管理
+- 支持个人收支记录、筛选、统计分析和 CSV 导出
+- 支持多人共享账本、灵活分摊、余额计算与补差结算
+- 支持飞牛 NAS 账号登录与应用账号绑定
+"""

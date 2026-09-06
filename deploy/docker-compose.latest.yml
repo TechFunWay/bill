@@ -1,0 +1,52 @@
+# 部署文件（latest 自动更新，随发行产物分发）
+# 使用 latest 标签镜像，配合 Watchtower 自动拉取新版本并重启容器，保持始终最新。
+#
+# 用法：
+#   cd release/<VERSION>
+#   docker compose -f docker-compose.latest.yml up -d
+#
+# 镜像说明：
+#   - latest 模式需要镜像可从仓库拉取；本地构建的 latest 镜像不会自动更新，
+#     需先将 techfunways/bill:latest 推送到镜像仓库
+#
+# Watchtower 默认每 24 小时（86400 秒）检查一次更新，仅监控 techfunway-bill 容器，
+# 更新后自动清理旧镜像。调整检查频率请修改 watchtower 的 --interval 参数（单位：秒）。
+services:
+  bill:
+    image: techfunways/bill:latest
+    container_name: techfunway-bill
+    ports:
+      - "8907:8907"
+    volumes:
+      # 运行时数据/配置目录：数据库、上传文件、日志均存放于此。
+      # 持久化该目录即可在重建/升级后保留全部账号、配置与数据。
+      - techfunway-bill-data:/app/data
+    environment:
+      # 日志模式：release 或 debug
+      - ENV=release
+      # 数据目录（容器内路径，需与上方 volume 挂载点一致）
+      - DATA_DIR=/app/data
+      # 服务端口（修改时需同步调整上方 ports 映射）
+      # - PORT=8907
+      # 公开接口每分钟限流，0 表示不限
+      # - RATE_LIMIT=20
+      # 允许的 CORS 来源，* 表示全部
+      # - CORS_ORIGIN=*
+      # 日志保留天数，0 表示永久保留
+      # - LOG_RETENTION_DAYS=30
+    restart: unless-stopped
+
+  # Watchtower：监控 bill 容器，发现新镜像自动拉取并滚动重启。
+  watchtower:
+    image: containrrr/watchtower
+    container_name: techfunway-bill-watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # --cleanup：更新后删除旧镜像
+    # --interval 86400：检查间隔（秒），86400 = 24 小时
+    # techfunway-bill：仅监控该容器，不影响宿主机上其他容器
+    command: --cleanup --interval 86400 techfunway-bill
+    restart: unless-stopped
+
+volumes:
+  techfunway-bill-data:

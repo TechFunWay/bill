@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>正在登录 · 账单</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; color: #fff; background: #171827; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .card { width: min(440px,100%); padding: 36px; border: 1px solid rgba(255,255,255,.12); border-radius: 20px; background: rgba(255,255,255,.04); text-align: center; }
+    .icon { width: 52px; height: 52px; margin: 0 auto 20px; display: grid; place-items: center; border-radius: 15px; color: #fff; background: linear-gradient(135deg,#6366f1,#8b5cf6); font-size: 24px; }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p { margin: 0; color: rgba(255,255,255,.6); font-size: 14px; line-height: 1.65; }
+    .error { color: #fda4af; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">✓</div>
+    <h1>正在使用飞牛 NAS 登录</h1>
+    <p id="status">验证当前 NAS 用户后，将自动打开账单应用…</p>
+  </main>
+  <script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    const status = document.getElementById('status');
+    try {
+      // 相对路径（不带前导斜杠），自动落在 /app/<包名>/ 网关前缀下。
+      const response = await fetch('api/auth/fnos/ticket', { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok || data.code !== 0 || !data.data?.ticket) {
+        throw new Error(data.message || '未获取到飞牛 NAS 登录信息');
+      }
+      const base = window.location.pathname.replace(/\/fnos-entry\.html$/, '/');
+      const target = 'http://' + window.location.hostname + ':__APP_PORT__' + base
+        + '#fnos_ticket=' + encodeURIComponent(data.data.ticket);
+      window.location.replace(target);
+    } catch (error) {
+      status.classList.add('error');
+      status.textContent = error.message || '飞牛 NAS 登录失败，请从桌面应用入口重试。';
+    }
+  });
+  </script>
+</body>
+</html>
