@@ -2,6 +2,18 @@
 
 面向个人、家庭、合租、旅行和小团队的多用户账单应用。支持个人收支统计，以及多人共同记账、灵活分摊、余额计算和补差结算；在飞牛 fnOS 上可通过 NAS 账号一键登录。
 
+## 界面预览
+
+| 总览（深色主题） | 我的账本（浅色主题） |
+| --- | --- |
+| ![总览](docs/screenshots/pc-overview-dark.png) | ![我的账本](docs/screenshots/pc-ledgers-light.png) |
+
+移动端：
+
+<p align="center">
+  <img src="docs/screenshots/mobile-ledgers.png" alt="移动端账本" width="320">
+</p>
+
 ## 功能
 
 ### 个人记账
