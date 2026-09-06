@@ -1,0 +1,41 @@
+# 部署文件（随发行产物分发）
+# 本文件由发行脚本复制到 release/<VERSION>/ 目录，镜像版本号自动替换为当前版本。
+#
+# 用法：
+#   cd release/<VERSION>
+#   docker compose up -d
+#
+# 镜像说明：
+#   - 本机已构建：make build-docker 生成 techfunways/bill:<VERSION>
+#   - 远程部署：需先将对应版本镜像推送到镜像仓库后再拉取
+#
+# 升级方式：
+#   切换到新版本发行目录后执行 docker compose up -d；
+#   数据保存在 techfunway-bill-data volume，升级不会丢失。
+services:
+  bill:
+    image: techfunways/bill:latest
+    container_name: techfunway-bill
+    ports:
+      - "8907:8907"
+    volumes:
+      # 运行时数据/配置目录：数据库、上传文件、日志均存放于此。
+      # 持久化该目录即可在重建/升级后保留全部账号、配置与数据。
+      - techfunway-bill-data:/app/data
+    environment:
+      # 日志模式：release 或 debug
+      - ENV=release
+      # 数据目录（容器内路径，需与上方 volume 挂载点一致）
+      - DATA_DIR=/app/data
+      # 服务端口（修改时需同步调整上方 ports 映射）
+      # - PORT=8907
+      # 公开接口每分钟限流，0 表示不限
+      # - RATE_LIMIT=20
+      # 允许的 CORS 来源，* 表示全部
+      # - CORS_ORIGIN=*
+      # 日志保留天数，0 表示永久保留
+      # - LOG_RETENTION_DAYS=30
+    restart: unless-stopped
+
+volumes:
+  techfunway-bill-data:

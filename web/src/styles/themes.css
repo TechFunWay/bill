@@ -1,0 +1,73 @@
+/* Bill Ledger visual system. Values stay as RGB triplets so Tailwind opacity
+ * modifiers work with every semantic token. */
+
+:root {
+  --color-brand-50:  241 243 252;
+  --color-brand-100: 226 230 249;
+  --color-brand-200: 196 204 239;
+  --color-brand-300: 155 169 225;
+  --color-brand-400: 110 128 204;
+  --color-brand-500: 75 91 166;
+  --color-brand-600: 55 67 133;
+  --color-brand-700: 45 55 112;
+  --color-brand-800: 37 45 91;
+  --color-brand-900: 29 34 70;
+
+  /* Persistent components receive complete theme pairs, rather than keeping
+     an always-dark background in light mode. */
+  --color-sidebar:             var(--color-background);
+  --color-sidebar-foreground:  28 30 42;
+  --color-sidebar-muted:       75 82 110;
+  --color-sidebar-border:      var(--color-border);
+  --color-sidebar-panel:       255 254 251;
+  /* The balance summary is a dashboard card and uses the same surface tokens. */
+  --color-balance:             var(--color-surface);
+  --color-balance-foreground:  var(--color-surface-foreground);
+  --color-balance-muted:       var(--color-muted-foreground);
+  --color-balance-border:      var(--color-border);
+
+  --color-background:          247 246 242;
+  --color-foreground:          28 30 42;
+  --color-surface:             255 254 251;
+  --color-surface-foreground:  28 30 42;
+  --color-muted:               238 237 234;
+  --color-muted-foreground:    101 103 117;
+  --color-border:              219 217 213;
+  --color-input:               193 191 190;
+  --color-ring:                var(--color-brand-500);
+  --color-accent:              244 112 82;
+  --color-destructive:         195 64 65;
+}
+
+.dark {
+  --color-brand-50:            30 32 49;
+  --color-brand-100:           38 42 67;
+  --color-brand-200:           52 58 92;
+  --color-brand-300:           171 180 238;
+  --color-brand-400:           139 151 224;
+  --color-brand-500:           111 124 205;
+  --color-brand-600:           84 97 177;
+  --color-brand-700:           66 77 150;
+  --color-brand-800:           48 56 112;
+  /* Large persistent surfaces share the same midnight tone in dark mode. */
+  --color-brand-900:           36 41 76;
+  --color-sidebar:             var(--color-background);
+  --color-sidebar-foreground:  247 245 241;
+  --color-sidebar-muted:       181 183 194;
+  --color-sidebar-border:      var(--color-border);
+  --color-sidebar-panel:       38 40 55;
+  --color-balance:             var(--color-surface);
+  --color-balance-foreground:  var(--color-surface-foreground);
+  --color-balance-muted:       var(--color-muted-foreground);
+  --color-balance-border:      var(--color-border);
+  --color-background:          17 18 26;
+  --color-foreground:          247 245 241;
+  --color-surface:             27 29 42;
+  --color-surface-foreground:  247 245 241;
+  --color-muted:               38 40 55;
+  --color-muted-foreground:    181 183 194;
+  --color-border:              57 59 76;
+  --color-input:               73 75 92;
+  --color-accent:              255 137 105;
+  --color-destructive:         247 112 112;
+}

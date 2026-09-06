@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账单 App 图标设计稿 · Azure Glass</title>
+<style>
+  :root{
+    --bg:#0d1420; --panel:#141d2b; --ink:#eef3fa; --sub:#8ba0b8;
+    --line:#233246; --accent:#2ea8ee;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(46,168,238,.14), transparent 60%),
+      radial-gradient(900px 500px at 8% 110%, rgba(249,182,46,.08), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    min-height:100vh; padding:48px 24px 80px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{margin-bottom:40px}
+  .eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+  h1{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  h1 .gold{color:#f9b62e}
+  p.lede{color:var(--sub);margin-top:12px;font-size:15px;line-height:1.7;max-width:640px}
+  .hero{display:flex;gap:40px;align-items:center;flex-wrap:wrap;margin:36px 0 48px}
+  .hero img{
+    width:280px;height:280px;border-radius:64px;
+    box-shadow:0 30px 70px rgba(4,24,52,.65), 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .meta{flex:1;min-width:260px}
+  .meta h2{font-size:20px;margin-bottom:14px}
+  .meta ul{list-style:none}
+  .meta li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px;color:var(--sub)}
+  .meta li b{color:var(--ink);font-weight:600;min-width:72px}
+  .swatch{display:inline-block;width:13px;height:13px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid rgba(255,255,255,.2)}
+  section{margin-bottom:44px}
+  h3{font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);font-weight:600;margin-bottom:18px}
+  .row{display:flex;gap:28px;align-items:flex-end;flex-wrap:wrap;padding:26px;border-radius:20px}
+  .row.light{background:linear-gradient(135deg,#f4f7fb,#e7edf5)}
+  .row.dark{background:linear-gradient(135deg,#101826,#0a111d);border:1px solid var(--line)}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .cell img{display:block}
+  .cell .r16{border-radius:4px}.cell .r32{border-radius:7px}.cell .r64{border-radius:14px}
+  .cell .r128{border-radius:28px}.cell .r256{border-radius:56px}
+  .cell span{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums}
+  .row.light .cell span{color:#5a6b80}
+  .note{font-size:13px;color:var(--sub);margin-top:10px;line-height:1.6}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">账单 · App Icon · 设计稿 v3</div>
+    <h1>Azure Glass <span class="gold">¥</span> Coin</h1>
+    <p class="lede">蔚蓝玻璃底座 + 磨砂玻璃收据 + 立体金色 ¥ 硬币 + 翠绿结算徽章。
+    硬币为视觉焦点，体现「账单 · 金额 · 结算」三大功能；整体为苹果风格 3D 玻璃质感。</p>
+  </header>
+
+  <div class="hero">
+    <img src="preview/azure-512.png" alt="icon 512">
+    <div class="meta">
+      <h2>设计要点</h2>
+      <ul>
+        <li><b>底座</b><span><span class="swatch" style="background:#2ea8ee"></span>明亮蔚蓝玻璃 · 顶部高光带 + 反光</span></li>
+        <li><b>收据</b><span><span class="swatch" style="background:#eaf6ff"></span>磨砂玻璃 · 账目明细 + 锯齿底边</span></li>
+        <li><b>硬币</b><span><span class="swatch" style="background:#f9b62e"></span>立体金色 ¥ · 最亮高光点</span></li>
+        <li><b>徽章</b><span><span class="swatch" style="background:#2bcb66"></span>翠绿对勾 · 已结算</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <section>
+    <h3>浅色背景 · 各尺寸</h3>
+    <div class="row light">
+      <div class="cell"><img class="r256" src="preview/azure-256.png" width="256" height="256"><span>256</span></div>
+      <div class="cell"><img class="r128" src="preview/azure-128.png" width="128" height="128"><span>128</span></div>
+      <div class="cell"><img class="r64" src="preview/azure-64.png" width="64" height="64"><span>64</span></div>
+      <div class="cell"><img class="r32" src="preview/azure-32.png" width="32" height="32"><span>32</span></div>
+      <div class="cell"><img class="r16" src="preview/azure-16.png" width="16" height="16"><span>16</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h3>深色背景 · 各尺寸</h3>
+    <div class="row dark">
+      <div class="cell"><img class="r256" src="preview/azure-256.png" width="256" height="256"><span>256</span></div>
+      <div class="cell"><img class="r128" src="preview/azure-128.png" width="128" height="128"><span>128</span></div>
+      <div class="cell"><img class="r64" src="preview/azure-64.png" width="64" height="64"><span>64</span></div>
+      <div class="cell"><img class="r32" src="preview/azure-32.png" width="32" height="32"><span>32</span></div>
+      <div class="cell"><img class="r16" src="preview/azure-16.png" width="16" height="16"><span>16</span></div>
+    </div>
+    <p class="note">16px 为浏览器标签页 favicon 实际大小；64px 为飞牛桌面小图标；256px 为应用商店 / 桌面大图标。</p>
+  </section>
+</div>
+</body>
+</html>

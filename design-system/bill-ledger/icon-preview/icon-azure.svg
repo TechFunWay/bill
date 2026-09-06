@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- ===== Bright azure glass dome ===== -->
+    <radialGradient id="bg" cx="34%" cy="20%" r="100%">
+      <stop offset="0%" stop-color="#D8F4FF"/>
+      <stop offset="26%" stop-color="#7CD6FD"/>
+      <stop offset="58%" stop-color="#2EA8EE"/>
+      <stop offset="100%" stop-color="#0A6BD0"/>
+    </radialGradient>
+    <linearGradient id="glossBand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="spec" cx="42%" cy="18%" r="62%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.62"/>
+      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="baseDepth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#063B6E" stop-opacity="0"/>
+      <stop offset="72%" stop-color="#063B6E" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#063B6E" stop-opacity="0.45"/>
+    </linearGradient>
+
+    <!-- ===== Frosted-glass receipt ===== -->
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="52%" stop-color="#EAF6FF" stop-opacity="0.44"/>
+      <stop offset="100%" stop-color="#CBE6FB" stop-opacity="0.34"/>
+    </linearGradient>
+    <linearGradient id="glassEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9CCBF0"/>
+      <stop offset="100%" stop-color="#6FA9DE"/>
+    </linearGradient>
+    <linearGradient id="headerBar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5BC9FB"/>
+      <stop offset="100%" stop-color="#1E8FE0"/>
+    </linearGradient>
+
+    <!-- ===== Gold ¥ coin (tilted, 3D cylinder) ===== -->
+    <radialGradient id="coinFace" cx="38%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="#FFF9DC"/>
+      <stop offset="28%" stop-color="#FFE682"/>
+      <stop offset="60%" stop-color="#F9B62E"/>
+      <stop offset="100%" stop-color="#C1710A"/>
+    </radialGradient>
+    <linearGradient id="coinSide" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E5A41C"/>
+      <stop offset="45%" stop-color="#B47708"/>
+      <stop offset="100%" stop-color="#6E4202"/>
+    </linearGradient>
+    <linearGradient id="coinRim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF0AE"/>
+      <stop offset="100%" stop-color="#E9A81E"/>
+    </linearGradient>
+    <linearGradient id="yenGold" x1="0" y1="233" x2="0" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7C4E05"/>
+      <stop offset="100%" stop-color="#4A2E01"/>
+    </linearGradient>
+    <radialGradient id="coinSpec" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.98"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="contactAO" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#04305E" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#04305E" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#04305E" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ===== Emerald settle badge ===== -->
+    <radialGradient id="badge" cx="36%" cy="26%" r="92%">
+      <stop offset="0%" stop-color="#7CF2AE"/>
+      <stop offset="42%" stop-color="#2BCB66"/>
+      <stop offset="100%" stop-color="#0C8A40"/>
+    </radialGradient>
+    <linearGradient id="badgeEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#12A24E"/>
+      <stop offset="100%" stop-color="#076B31"/>
+    </linearGradient>
+
+    <filter id="glassBlur"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="cardShadow" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="20" stdDeviation="26" flood-color="#05386B" flood-opacity="0.5"/>
+    </filter>
+    <filter id="coinShadow" x="-30%" y="-40%" width="170%" height="190%">
+      <feDropShadow dx="14" dy="22" stdDeviation="22" flood-color="#03284F" flood-opacity="0.55"/>
+    </filter>
+    <filter id="badgeShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#04451F" flood-opacity="0.5"/>
+    </filter>
+
+    <clipPath id="bgClip"><rect width="512" height="512" rx="116"/></clipPath>
+    <path id="receipt" d="M110 42 H402 A30 30 0 0 1 432 72 V436 L388 470 L344 436 L300 470 L256 436 L212 470 L168 436 L124 470 L80 436 V72 A30 30 0 0 1 110 42 Z"/>
+    <clipPath id="receiptClip"><use href="#receipt"/></clipPath>
+    <!-- ¥ drawn flat, then foreshortened onto the tilted coin face -->
+    <g id="yenFlat" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M196 235 L256 320"/>
+      <path d="M316 235 L256 320"/>
+      <path d="M256 320 L256 390"/>
+      <path d="M210 338 L302 338"/>
+      <path d="M210 368 L302 368"/>
+    </g>
+  </defs>
+
+  <!-- ===== Azure glass dome base ===== -->
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <g clip-path="url(#bgClip)">
+    <ellipse cx="256" cy="88" rx="252" ry="120" fill="url(#glossBand)"/>
+    <ellipse cx="190" cy="100" rx="206" ry="140" fill="url(#spec)"/>
+    <ellipse cx="158" cy="72" rx="54" ry="26" fill="#FFFFFF" opacity="0.38"/>
+    <rect width="512" height="512" fill="url(#baseDepth)"/>
+  </g>
+  <rect x="2" y="2" width="508" height="508" rx="115" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="3.5"/>
+  <rect x="7" y="7" width="498" height="498" rx="109" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.5"/>
+
+  <!-- ===== Frosted-glass receipt (3D slab, near full-bleed) ===== -->
+  <g filter="url(#cardShadow)">
+    <use href="#receipt" transform="translate(7 13)" fill="#5E97CE"/>
+    <use href="#receipt" transform="translate(4 8)" fill="url(#glassEdge)"/>
+    <g clip-path="url(#receiptClip)">
+      <rect width="512" height="512" fill="url(#bg)" filter="url(#glassBlur)" opacity="0.9"/>
+    </g>
+    <use href="#receipt" fill="url(#glass)"/>
+    <g clip-path="url(#receiptClip)">
+      <ellipse cx="256" cy="70" rx="190" ry="60" fill="#FFFFFF" opacity="0.4"/>
+    </g>
+  </g>
+  <use href="#receipt" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2"/>
+  <path d="M114 47 H398" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.98"/>
+  <path d="M84 76 V430" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.5"/>
+  <path d="M428 76 V430" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.32"/>
+
+  <!-- header bar (3D) -->
+  <rect x="150" y="80" width="212" height="26" rx="13" fill="url(#headerBar)"/>
+  <rect x="153" y="82" width="206" height="8" rx="4" fill="#FFFFFF" opacity="0.55"/>
+
+  <!-- ledger lines (soft frosted print) -->
+  <g stroke="#BCD3E6" stroke-width="11" stroke-linecap="round" opacity="0.9">
+    <path d="M146 128 H366"/>
+    <path d="M146 158 H300"/>
+  </g>
+
+  <!-- ===== contact shadow / ambient occlusion under the coin (offset lower-right, light from top-left) ===== -->
+  <ellipse cx="274" cy="412" rx="176" ry="44" fill="url(#contactAO)"/>
+
+  <!-- ===== Gold ¥ coin — tilted 3D cylinder ===== -->
+  <g filter="url(#coinShadow)">
+    <!-- cylinder side (visible thickness) -->
+    <path d="M101 295 A155 98 0 0 0 411 295 L411 327 A155 98 0 0 1 101 327 Z" fill="url(#coinSide)"/>
+    <!-- reeded-edge hint: light line where face meets side -->
+    <path d="M101 295 A155 98 0 0 0 411 295" fill="none" stroke="#FFE9A8" stroke-width="3" opacity="0.55"/>
+    <!-- top face -->
+    <ellipse cx="256" cy="295" rx="155" ry="98" fill="url(#coinFace)"/>
+    <!-- raised inner rim (foreshortened) -->
+    <ellipse cx="256" cy="295" rx="133" ry="84" fill="none" stroke="url(#coinRim)" stroke-width="6" opacity="0.9"/>
+    <ellipse cx="256" cy="295" rx="133" ry="84" fill="none" stroke="#B26F06" stroke-width="1.5" opacity="0.3"/>
+  </g>
+  <!-- specular highlights on the face (brightest point) -->
+  <ellipse cx="196" cy="258" rx="58" ry="30" fill="url(#coinSpec)" transform="rotate(-18 196 258)"/>
+  <ellipse cx="182" cy="248" rx="22" ry="10" fill="#FFFFFF" opacity="0.92" transform="rotate(-18 182 248)"/>
+  <!-- rim light top-left of face -->
+  <path d="M128 262 A155 98 0 0 1 224 200" fill="none" stroke="#FFF3C2" stroke-width="5" opacity="0.85" stroke-linecap="round"/>
+  <!-- ¥ foreshortened onto the tilted face -->
+  <g transform="translate(256 295) scale(1 0.62) translate(-256 -295)">
+    <use href="#yenFlat" stroke="url(#yenGold)" stroke-width="26"/>
+  </g>
+  <path d="M199 240 L253 314" fill="none" stroke="#FFE9A8" stroke-width="3.5" stroke-linecap="round" opacity="0.5" transform="translate(256 295) scale(1 0.62) translate(-256 -295)"/>
+
+  <!-- ===== Emerald settle badge (3D sphere) ===== -->
+  <g filter="url(#badgeShadow)">
+    <circle cx="392" cy="434" r="58" fill="url(#badgeEdge)"/>
+    <circle cx="392" cy="426" r="58" fill="url(#badge)"/>
+    <ellipse cx="374" cy="403" rx="30" ry="17" fill="#FFFFFF" opacity="0.5"/>
+    <ellipse cx="367" cy="396" rx="14" ry="8" fill="#FFFFFF" opacity="0.65"/>
+    <path d="M366 429 L384 447 L420 408" fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

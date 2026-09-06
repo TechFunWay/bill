@@ -1,0 +1,11 @@
+#!/bin/bash
+
+### This script is called after the user change environment variables in application setting page.
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+. "${SCRIPT_DIR}/port_config"
+configure_port "${wizard_service_port:-}"
+
+# Apply the new listener immediately. The desktop entry remains a URL gateway
+# entry, so it never carries a direct port that would bypass NAS identity.
+bash "${SCRIPT_DIR}/main" restart
