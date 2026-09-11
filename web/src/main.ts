@@ -13,7 +13,10 @@ function captureFnOSTicket() {
   const ticket = params.get('fnos_ticket')
   if (!ticket) return
   sessionStorage.setItem('fnos_ticket', ticket)
+  const fnosUsername = params.get('fnos_username')
+  if (fnosUsername) sessionStorage.setItem('fnos_ticket_username', fnosUsername)
   params.delete('fnos_ticket')
+  params.delete('fnos_username')
   const rest = params.toString()
   history.replaceState(null, '', window.location.pathname + window.location.search + (rest ? `#${rest}` : ''))
 }

@@ -11,13 +11,7 @@ VERSION=$(cat VERSION | tr -d '\n')
 BUILD_TIME=$(date +%Y-%m-%dT%H:%M:%S)
 GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS="-X smallgo/server/version.Version=${VERSION} -X smallgo/server/version.BuildTime=${BUILD_TIME} -X smallgo/server/version.GitCommit=${GIT_COMMIT} -X smallgo/server/version.AppName=${APP_BINARY}"
-
-# Verify Docker is available (required for CGO cross-compilation)
-if ! command -v docker &>/dev/null; then
-  echo "Error: Docker is required for fnOS package builds (CGO cross-compilation)."
-  echo "Install Docker Desktop and try again."
-  exit 1
-fi
+LOCAL_GOCACHE="${GOCACHE:-/tmp/bill-go-build}"
 
 echo "Building frontend..."
 VITE_FNOS_APP=true VITE_BASE_PATH="/app/${FNOS_PKG_NAME}/" npm --prefix web ci
@@ -30,23 +24,35 @@ cp -r web/dist server/static/dist
 BUILD_DIR="release/${VERSION}"
 mkdir -p ${BUILD_DIR}
 
+# Keep the version directory self-contained: every release ships the README
+# screenshots alongside the packages.
+if [ -d docs/screenshots ]; then
+  mkdir -p "${BUILD_DIR}/screenshots"
+  cp docs/screenshots/*.png "${BUILD_DIR}/screenshots/"
+  echo "Copied screenshots"
+fi
+
 # Save original manifest
 cp fnpack/manifest fnpack/manifest.bak
 
 for ARCH in "amd64" "arm64"; do
   echo "Building fnOS package for ${ARCH}..."
 
-  echo "  Compiling Go binary via Docker (CGO_ENABLED=1, linux/${ARCH})..."
-  docker run --rm \
-    -v "${ROOT_DIR}/server:/src" \
-    -v "go-build-cache:/root/.cache/go-build" \
-    -v "go-mod-cache:/go/pkg/mod" \
-    -w /src \
-    --platform "linux/${ARCH}" \
-    -e "LDFLAGS=${LDFLAGS}" \
-    -e "ARCH=${ARCH}" \
-    golang:1.26-alpine \
-    sh -c 'apk add --no-cache gcc musl-dev && CGO_ENABLED=1 go build -ldflags "$LDFLAGS -extldflags -static" -o "bill-linux-${ARCH}" .'
+  echo "  Compiling Go binary (CGO_ENABLED=1, linux/${ARCH})..."
+  case "$ARCH" in
+    amd64) CC_COMPILER="x86_64-linux-musl-gcc" ;;
+    arm64) CC_COMPILER="aarch64-linux-musl-gcc" ;;
+    *) echo "Unsupported arch: ${ARCH}"; exit 1 ;;
+  esac
+  if ! command -v "$CC_COMPILER" >/dev/null 2>&1; then
+    echo "Error: ${CC_COMPILER} not found."
+    echo "Install with: brew install FiloSottile/musl-cross/musl-cross"
+    exit 1
+  fi
+  cd server
+  GOCACHE="$LOCAL_GOCACHE" CGO_ENABLED=1 GOOS=linux GOARCH=$ARCH CC="$CC_COMPILER" \
+    go build -ldflags "${LDFLAGS} -extldflags -static" -o "bill-linux-${ARCH}" .
+  cd "$ROOT_DIR"
 
   # Prepare build directory
   BUILD_PACK="${BUILD_DIR}/${APP_NAME}_${ARCH}"
@@ -92,15 +98,15 @@ for ARCH in "amd64" "arm64"; do
 
   # Move the built fpk to release directory
   if [ -f "${BUILD_PACK}/${FNOS_PKG_NAME}.fpk" ]; then
-    mv "${BUILD_PACK}/${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${ARCH}.fpk"
-  elif [ -f "${BUILD_PACK}/../${FNOS_PKG_NAME}_${ARCH}.fpk" ]; then
-    mv "${BUILD_PACK}/../${FNOS_PKG_NAME}_${ARCH}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${ARCH}.fpk"
+    mv "${BUILD_PACK}/${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${VERSION}_${ARCH}.fpk"
+  elif [ -f "${BUILD_PACK}/../${FNOS_PKG_NAME}.fpk" ]; then
+    mv "${BUILD_PACK}/../${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${VERSION}_${ARCH}.fpk"
   fi
 
   # Clean up
   rm -rf "${BUILD_PACK}"
 
-  echo "Built ${FNOS_PKG_NAME}_${ARCH}.fpk"
+  echo "Built ${FNOS_PKG_NAME}_${VERSION}_${ARCH}.fpk"
 done
 
 # Restore original manifest

@@ -53,6 +53,25 @@
       </button>
     </form>
 
+    <Teleport to="body">
+      <transition enter-active-class="transition duration-200" enter-from-class="opacity-0" leave-active-class="transition duration-150" leave-to-class="opacity-0">
+        <div v-if="showFnOSConfirm" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm" @click.self="cancelFnOSConfirm">
+          <section role="dialog" aria-modal="true" aria-labelledby="fnos-confirm-title" class="w-full max-w-md rounded-3xl border border-white/15 bg-[#171827] p-6 text-white shadow-2xl sm:p-8">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-violet-500 text-2xl font-bold shadow-lg shadow-brand-500/25">{{ fnosConfirmUsername.slice(0, 1) || '飞' }}</div>
+            <h2 id="fnos-confirm-title" class="mt-5 text-center text-2xl font-bold">确认使用飞牛 NAS 登录</h2>
+            <p class="mt-2 text-center text-sm leading-6 text-white/65">“账单”将使用下方飞牛 NAS 账号完成授权登录</p>
+            <div class="mt-6 flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-4">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-400/25 font-semibold text-brand-100">{{ fnosConfirmUsername.slice(0, 1) || '飞' }}</span>
+              <span class="font-semibold">{{ fnosConfirmUsername || '当前飞牛 NAS 用户' }}</span>
+            </div>
+            <button type="button" :disabled="loading" @click="confirmFnOSLogin" class="btn-premium mt-6">{{ loading ? '正在登录…' : '确认登录' }}</button>
+            <button type="button" :disabled="loading" @click="switchFnOSAccount" class="mt-3 w-full rounded-xl px-4 py-3 text-sm font-semibold text-brand-200 transition-colors hover:bg-white/[0.06] hover:text-brand-100 disabled:opacity-60">使用其他飞牛账号</button>
+            <button type="button" :disabled="loading" @click="cancelFnOSConfirm" class="mt-1 w-full rounded-xl px-4 py-2 text-sm text-white/55 transition-colors hover:text-white/80 disabled:opacity-60">取消</button>
+          </section>
+        </div>
+      </transition>
+    </Teleport>
+
     <template #footer v-if="authStore.allowRegister">
       还没有账号？
       <router-link to="/register" class="font-semibold text-brand-300 hover:text-brand-200 transition-colors">立即注册</router-link>
@@ -78,12 +97,15 @@ const loading = ref(false)
 const errorMsg = ref('')
 const fnosBindingRequired = ref(false)
 const fnosUsername = ref('')
+const fnosConfirmUsername = ref('')
+const showFnOSConfirm = ref(false)
 const fnosEnabled = import.meta.env.VITE_FNOS_APP === 'true'
 const REMEMBER_PREFERENCE_KEY = 'remember_login_preference'
 const rememberLogin = ref(localStorage.getItem(REMEMBER_PREFERENCE_KEY) !== 'false')
 
 function clearFnOSTicket() {
   sessionStorage.removeItem('fnos_ticket')
+  sessionStorage.removeItem('fnos_ticket_username')
 }
 
 async function handleLogin() {
@@ -110,7 +132,7 @@ async function handleLogin() {
 }
 
 // 登录页运行在应用自身端口上，无法直接拿到网关身份头；改为打开网关跳板页，
-// 由跳板页签发一次性票据后带回调转页面自动登录。
+// 跳板页签发一次性票据并带回当前 NAS 用户名，先弹确认框再登录。
 function handleFnOSLogin() {
   const gatewayURL = localStorage.getItem('fnos_gateway_url')
   if (!gatewayURL) {
@@ -121,14 +143,39 @@ function handleFnOSLogin() {
   window.location.href = gatewayURL
 }
 
+function openFnOSConfirm() {
+  fnosConfirmUsername.value = sessionStorage.getItem('fnos_ticket_username') || ''
+  showFnOSConfirm.value = true
+}
+
+function cancelFnOSConfirm() {
+  showFnOSConfirm.value = false
+  clearFnOSTicket()
+}
+
+// 切换飞牛账号：跳到飞牛桌面的登录页，登录成功后经 redirect_uri 回到本页。
+function switchFnOSAccount() {
+  const gatewayURL = localStorage.getItem('fnos_gateway_url')
+  if (!gatewayURL) {
+    showFnOSConfirm.value = false
+    clearFnOSTicket()
+    errorMsg.value = '无法定位飞牛桌面入口，请从飞牛桌面重新打开本应用'
+    return
+  }
+  const appLoginPath = `${window.location.origin}${import.meta.env.BASE_URL}login`
+  window.location.href = `${new URL(gatewayURL).origin}/login?redirect_uri=${encodeURIComponent(appLoginPath)}`
+}
+
 async function loginWithTicket(remember: boolean) {
   const res = await fnosLogin(remember)
   if (res.data?.code !== 0) {
     clearFnOSTicket()
+    showFnOSConfirm.value = false
     errorMsg.value = res.data?.message || '飞牛 NAS 登录失败'
     return
   }
   if (res.data.data?.binding_required) {
+    showFnOSConfirm.value = false
     if (res.data.data.has_accounts || res.data.data.suggested_mode === 'bind') {
       fnosBindingRequired.value = true
       fnosUsername.value = res.data.data.fnos_username || ''
@@ -151,24 +198,31 @@ async function loginWithTicket(remember: boolean) {
   localStorage.setItem(REMEMBER_PREFERENCE_KEY, String(remember))
   authStore.setToken(res.data.data.token, remember)
   authStore.setUser(res.data.data.user)
+  showFnOSConfirm.value = false
   router.push('/admin')
+}
+
+async function confirmFnOSLogin() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    await loginWithTicket(rememberLogin.value)
+  } catch (err: any) {
+    clearFnOSTicket()
+    showFnOSConfirm.value = false
+    errorMsg.value = err.response?.data?.message || '飞牛 NAS 登录失败，请重新点击飞牛授权登录'
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(async () => {
   if (fnosEnabled && route.query.fnos_account_switched === '1') {
     await router.replace({ name: 'Login' })
   }
-  // 从网关跳板页带票据回来：自动完成飞牛登录；未绑定时会转入绑定表单。
+  // 从网关跳板页带票据回来：先弹确认框，用户确认后才真正登录。
   if (fnosEnabled && sessionStorage.getItem('fnos_ticket') && !authStore.isAuthenticated) {
-    loading.value = true
-    try {
-      await loginWithTicket(rememberLogin.value)
-    } catch {
-      clearFnOSTicket()
-      errorMsg.value = '飞牛 NAS 登录失败，请重试'
-    } finally {
-      loading.value = false
-    }
+    openFnOSConfirm()
   }
 })
 </script>

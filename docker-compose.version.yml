@@ -6,7 +6,7 @@
 #
 # 镜像需先构建或拉取：
 #   - 本地构建：make build-docker
-#   - 远程部署：需先将 techfunways/bill:v0.1.2 推送到镜像仓库
+#   - 远程部署：需先将 techfunways/bill:v0.1.4 推送到镜像仓库
 #
 # 升级到新版本时，修改下方 image 版本号后重新执行：
 #   docker compose -f docker-compose.version.yml pull && \
@@ -14,7 +14,7 @@
 version: '3.8'
 services:
   bill:
-    image: techfunways/bill:v0.1.2
+    image: techfunways/bill:v0.1.4
     container_name: techfunway-bill
     ports:
       - "8907:8907"

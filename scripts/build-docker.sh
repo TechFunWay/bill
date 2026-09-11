@@ -13,7 +13,7 @@ case "$DOCKER_ARCH" in
   *) echo "Unsupported local Docker architecture: ${DOCKER_ARCH}"; exit 1 ;;
 esac
 
-BUNDLE="release/${VERSION}/techfunway-bill-linux-${ARCH}.tar.gz"
+BUNDLE="release/${VERSION}/techfunway-bill-${VERSION}-linux-${ARCH}.tar.gz"
 CONTEXT_DIR="build/docker-local-context"
 
 if [ ! -f "$BUNDLE" ]; then

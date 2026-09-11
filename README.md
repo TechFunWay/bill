@@ -8,11 +8,25 @@
 | --- | --- |
 | ![总览](docs/screenshots/pc-overview-dark.png) | ![我的账本](docs/screenshots/pc-ledgers-light.png) |
 
-移动端：
+### 桌面端
 
-<p align="center">
-  <img src="docs/screenshots/mobile-ledgers.png" alt="移动端账本" width="320">
-</p>
+| 我的账单 | 统计分析 |
+| --- | --- |
+| ![我的账单](docs/screenshots/pc-bills-light.png) | ![统计分析](docs/screenshots/pc-analysis-dark.png) |
+
+| 共享账本详情 | 账户管理 |
+| --- | --- |
+| ![共享账本详情](docs/screenshots/pc-shared-light.png) | ![账户管理](docs/screenshots/pc-accounts-light.png) |
+
+| 分类与标签 | 登录 |
+| --- | --- |
+| ![分类与标签](docs/screenshots/pc-categories-light.png) | ![登录](docs/screenshots/pc-login-dark.png) |
+
+### 移动端
+
+| 我的账本 | 我的账单 | 统计分析 |
+| --- | --- | --- |
+| <img src="docs/screenshots/mobile-ledgers.png" alt="移动端我的账本" width="240"> | <img src="docs/screenshots/mobile-bills-light.png" alt="移动端我的账单" width="240"> | <img src="docs/screenshots/mobile-analysis-dark.png" alt="移动端统计分析" width="240"> |
 
 ## 功能
 

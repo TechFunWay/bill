@@ -19,10 +19,6 @@ export function fnosLogin(remember: boolean) {
   return request.post('/api/auth/fnos/login', { remember })
 }
 
-export function getFnOSIdentity() {
-  return request.get('/api/auth/fnos/identity')
-}
-
 export function bindFnOSAccount(mode: 'register' | 'bind', username: string, password: string, remember: boolean) {
   return request.post('/api/auth/fnos/bind', { mode, username, password, remember })
 }

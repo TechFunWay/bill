@@ -24,12 +24,18 @@ import (
 	"smallgo/server/security"
 	"smallgo/server/sysconfig"
 	"smallgo/server/upload"
+	"smallgo/server/usage"
 	"smallgo/server/user"
 	"smallgo/server/version"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
+
+// processStartedAt marks this process launch so the frontend can tell
+// "this run" from "after a restart" when deciding to re-show the support
+// dialog (same behaviour as the lottery app).
+var processStartedAt = time.Now()
 
 func Start() {
 	cfg := config.C
@@ -114,6 +120,12 @@ func Start() {
 	}
 
 	r := NewRouter(cfg, db, jwtSecret)
+
+	// Anonymous usage statistics: daily device heartbeat plus donate_support
+	// events. Set DISABLE_STATS=true to opt out entirely.
+	usage.Init(cfg.DataDir)
+	usage.Start()
+	defer usage.Stop()
 
 	// Start background jobs registered by the framework or apps.
 	sched := scheduler.Start()
@@ -268,7 +280,9 @@ func NewRouter(cfg config.Config, db *gorm.DB, jwtSecret string) *gin.Engine {
 	api := appGroup.Group("/api")
 
 	api.GET("/version", func(c *gin.Context) {
-		response.Success(c, version.GetVersion())
+		data := version.GetVersion()
+		data["startedAt"] = processStartedAt.Format(time.RFC3339)
+		response.Success(c, data)
 	})
 
 	// Liveness/readiness probe for Docker, NAS health checks, uptime monitors.
@@ -295,6 +309,17 @@ func NewRouter(cfg config.Config, db *gorm.DB, jwtSecret string) *gin.Engine {
 	optionalAuthGroup.Use(middleware.OptionalAuth(jwtSecret, db))
 	authGroup := api.Group("")
 	authGroup.Use(middleware.RequireAuth(jwtSecret, db))
+
+	// Donate support counter: a logged-in user taps "已支持" after scanning
+	// the payment QR code; one anonymous device-level event is reported. No
+	// user data leaves the instance.
+	authGroup.POST("/donate/support", func(c *gin.Context) {
+		if !usage.SendEvent("donate_support") {
+			response.Error(c, http.StatusBadGateway, response.CodeInternalError, "支持计数发送失败，请稍后再试")
+			return
+		}
+		response.Success(c, gin.H{"ok": true})
+	})
 	adminGroup := api.Group("")
 	adminGroup.Use(middleware.RequireAuth(jwtSecret, db))
 	adminGroup.Use(middleware.RequireAdmin())

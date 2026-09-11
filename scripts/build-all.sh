@@ -23,6 +23,14 @@ BUILD_DIR="release/${VERSION}"
 rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
+# Ship the README screenshots with every release so the version directory is
+# self-contained (the tracked source of truth stays docs/screenshots/).
+if [ -d docs/screenshots ]; then
+  mkdir -p "${BUILD_DIR}/screenshots"
+  cp docs/screenshots/*.png "${BUILD_DIR}/screenshots/"
+  echo "Copied screenshots"
+fi
+
 PLATFORMS=(
   "linux/amd64"
   "linux/arm64"
@@ -33,24 +41,27 @@ PLATFORMS=(
 
 for PLATFORM in "${PLATFORMS[@]}"; do
   IFS="/" read -r GOOS GOARCH <<< "$PLATFORM"
-  OUTPUT_NAME="${PACKAGE_PREFIX}-${GOOS}-${GOARCH}"
+  OUTPUT_NAME="${PACKAGE_PREFIX}-${VERSION}-${GOOS}-${GOARCH}"
   BINARY_NAME="${APP_NAME}-${GOOS}-${GOARCH}"
 
   echo "Building ${OUTPUT_NAME}..."
 
   if [ "$GOOS" = "linux" ]; then
-    # Use Docker for Linux targets (CGO cross-compilation)
-    docker run --rm \
-      -v "${ROOT_DIR}/server:/src" \
-      -v "go-build-cache:/root/.cache/go-build" \
-      -v "go-mod-cache:/go/pkg/mod" \
-      -w /src \
-      --platform "linux/${GOARCH}" \
-      -e "LDFLAGS=${LDFLAGS}" \
-      -e "GOARCH=${GOARCH}" \
-      -e "APP_NAME=${APP_NAME}" \
-      golang:1.26-alpine \
-      sh -c 'apk add --no-cache gcc musl-dev && CGO_ENABLED=1 go build -ldflags "$LDFLAGS -extldflags -static" -o "${APP_NAME}-linux-${GOARCH}" .'
+    # Local cross-compilation with musl-cross (static CGO binaries).
+    case "$GOARCH" in
+      amd64) CC_COMPILER="x86_64-linux-musl-gcc" ;;
+      arm64) CC_COMPILER="aarch64-linux-musl-gcc" ;;
+      *) echo "Unsupported linux arch: ${GOARCH}"; exit 1 ;;
+    esac
+    if ! command -v "$CC_COMPILER" >/dev/null 2>&1; then
+      echo "Error: ${CC_COMPILER} not found."
+      echo "Install with: brew install FiloSottile/musl-cross/musl-cross"
+      exit 1
+    fi
+    cd server
+    GOCACHE="$LOCAL_GOCACHE" CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH CC="$CC_COMPILER" \
+      go build -ldflags "${LDFLAGS} -extldflags -static" -o "${BINARY_NAME}" .
+    cd "$ROOT_DIR"
   elif [ "$GOOS" = "windows" ]; then
     cd server
     GOCACHE="$LOCAL_GOCACHE" GOOS=$GOOS GOARCH=$GOARCH go build -ldflags "${LDFLAGS}" -o "${BINARY_NAME}.exe" .
