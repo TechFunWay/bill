@@ -136,6 +136,7 @@ async function handleRegister() {
       const res = await bindFnOSAccount(fnosMode.value, username.value, password.value, rememberLogin.value)
       if (res.data?.code === 0) {
         sessionStorage.removeItem('fnos_ticket')
+        sessionStorage.removeItem('fnos_ticket_username')
         authStore.setToken(res.data.data.token, rememberLogin.value)
         authStore.setUser(res.data.data.user)
         authStore.resetInit()

@@ -66,6 +66,14 @@
       </header>
 
       <main id="main-content" ref="mainRef" tabindex="-1" class="min-w-0 w-full overflow-x-clip p-3 pb-28 outline-none lg:p-10 lg:pb-10">
+        <!-- 赞赏横幅：管理员可见，每个版本只出现一次；文档流内展示，不遮挡页面内容 -->
+        <div v-if="showDonateBanner" class="mb-4 flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-brand-600 to-brand-800 px-4 py-2.5 text-sm text-white shadow-md">
+          <span>☕ 账单应用免费、无广告、数据都在你自己的设备上。如果它帮到了你，欢迎请站长喝杯咖啡——1 元也是心意，完全自愿，不影响任何功能。</span>
+          <span class="flex shrink-0 items-center gap-2">
+            <button class="underline underline-offset-2 hover:opacity-80" @click="showSupportModal = true">去赞赏</button>
+            <button class="hover:opacity-80" title="关闭" aria-label="关闭赞赏横幅" @click="dismissDonateBanner"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+          </span>
+        </div>
         <RouterView v-slot="{ Component }"><Transition mode="out-in" enter-active-class="transition duration-200 ease-out" enter-from-class="translate-y-1 opacity-0" leave-active-class="transition duration-100" leave-to-class="opacity-0"><component :is="Component" /></Transition></RouterView>
       </main>
     </div>
@@ -79,6 +87,15 @@
     </nav>
 
     <Modal v-model="showSecurityModal" title="设置安全问题" :closable="false"><div class="space-y-4"><p class="text-sm leading-relaxed text-muted-foreground">你还没有设置安全问题。设置后，忘记密码时可安全找回账户。</p><div class="flex gap-3"><button class="btn-ghost flex-1 min-h-11" @click="dismissSecurityPrompt">稍后再说</button><button class="btn-brand flex-1 min-h-11" @click="goToSecurityQuestions">去设置</button></div></div></Modal>
+
+    <!-- 支持浮动按钮 -->
+    <button class="fixed bottom-20 right-4 z-40 flex min-h-11 items-center gap-1.5 rounded-full bg-surface px-4 shadow-card ring-1 ring-border transition-transform hover:scale-105 lg:bottom-6 lg:right-6" aria-label="支持作者" @click="showSupportModal = true">
+      <svg class="h-4 w-4 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span class="text-sm font-bold">支持</span>
+    </button>
+
+    <!-- 支持弹窗 -->
+    <SupportModal v-model="showSupportModal" show-actions @dismiss="onSupportDismiss" @supported="onSupportConfirmed" />
   </div>
 </template>
 
@@ -89,6 +106,7 @@ import { useAuthStore } from '../stores/auth'
 import { getVersion } from '../api/config'
 import UiThemeToggle from '../components/ui/ThemeToggle.vue'
 import Modal from '../components/Modal.vue'
+import SupportModal from '../components/SupportModal.vue'
 
 const billsIcon = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6m-6 4h6"/></svg>'
 const ledgersIcon = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Zm0 13h14M9 8h6"/></svg>'
@@ -112,6 +130,51 @@ const menuRef = ref<HTMLElement | null>(null)
 const mainRef = ref<HTMLElement | null>(null)
 const versionInfo = ref('')
 const showSecurityModal = ref(false)
+
+// ===== 赞赏支持状态 =====
+const showSupportModal = ref(false)
+const appVersion = ref('')
+const serverStartedAt = ref('')
+const donateSupported = ref(localStorage.getItem('donate_supported') === '1')
+const donateBannerDismissed = ref(localStorage.getItem('donate_banner_dismissed') || '')
+
+// 顶部横幅：管理员可见，每个版本只出现一次，支持过则永不再显示
+const showDonateBanner = computed(() => {
+  return authStore.isAdmin
+    && !donateSupported.value
+    && !!appVersion.value
+    && donateBannerDismissed.value !== appVersion.value
+})
+
+const dismissDonateBanner = () => {
+  donateBannerDismissed.value = appVersion.value
+  if (appVersion.value) localStorage.setItem('donate_banner_dismissed', appVersion.value)
+}
+
+// 启动弹窗：登录后首次进入时弹一次；
+// 点【暂不支持】后本次运行内（重启服务前）不再弹；
+// 【已支持】发送成功后永不再弹
+const scheduleSupportModal = () => {
+  if (!authStore.isAuthenticated) return
+  if (!authStore.isAdmin) return
+  if (donateSupported.value) return
+  if (serverStartedAt.value && localStorage.getItem('donate_dismissed_start') === serverStartedAt.value) return
+  showSupportModal.value = true
+}
+
+// 关闭弹窗（暂不支持 / ✕ / 点遮罩）：本次应用运行内不再弹出
+const onSupportDismiss = () => {
+  showSupportModal.value = false
+  if (serverStartedAt.value) localStorage.setItem('donate_dismissed_start', serverStartedAt.value)
+}
+
+// 已支持成功：永久记住
+const onSupportConfirmed = () => {
+  donateSupported.value = true
+  localStorage.setItem('donate_supported', '1')
+  showSupportModal.value = false
+}
+
 const titleMap: Record<string, string> = { '/admin': '总览', '/admin/personal': '我的账单', '/admin/personal/ledgers': '我的账本', '/admin/personal/accounts': '账户管理', '/admin/personal/settings': '分类与标签', '/admin/shared': '共享账本', '/admin/analysis': '统计分析', '/admin/profile': '个人资料', '/admin/settings': '偏好设置', '/admin/users': '用户管理', '/admin/configs': '系统配置', '/admin/audit': '操作日志' }
 const currentTitle = computed(() => route.path.startsWith('/admin/shared/') ? '共享账本详情' : titleMap[route.path] || '账单')
 const userInitial = computed(() => (authStore.user?.username || 'U').charAt(0).toUpperCase())
@@ -123,7 +186,20 @@ function dismissSecurityPrompt() { showSecurityModal.value = false; authStore.di
 function onClickOutside(event: MouseEvent) { if (menuRef.value && !menuRef.value.contains(event.target as Node)) menuOpen.value = false }
 watch(() => authStore.isAuthenticated && !authStore.hasSecurityQuestions && !authStore.securityPromptDismissed, value => { if (value) showSecurityModal.value = true }, { immediate: true })
 watch(() => route.fullPath, async () => { menuOpen.value = false; await nextTick(); mainRef.value?.focus({ preventScroll: true }) })
-onMounted(async () => { document.addEventListener('click', onClickOutside); try { const res = await getVersion(); const data = res.data?.data; if (data) versionInfo.value = `${data.appName} ${data.version}` } catch {} })
+onMounted(async () => {
+  document.addEventListener('click', onClickOutside)
+  try {
+    const res = await getVersion()
+    const data = res.data?.data
+    if (data) {
+      versionInfo.value = `${data.appName} ${data.version}`
+      appVersion.value = data.version || ''
+      serverStartedAt.value = data.startedAt || ''
+    }
+  } catch {}
+  // 等页面稳定后再弹赞赏窗口，避免与安全问题弹窗叠加
+  setTimeout(() => scheduleSupportModal(), 2500)
+})
 onBeforeUnmount(() => document.removeEventListener('click', onClickOutside))
 </script>
 

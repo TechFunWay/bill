@@ -32,7 +32,8 @@
       }
       const base = window.location.pathname.replace(/\/fnos-entry\.html$/, '/');
       const target = 'http://' + window.location.hostname + ':__APP_PORT__' + base
-        + '#fnos_ticket=' + encodeURIComponent(data.data.ticket);
+        + '#fnos_ticket=' + encodeURIComponent(data.data.ticket)
+        + '&fnos_username=' + encodeURIComponent(data.data.fnos_username || '');
       window.location.replace(target);
     } catch (error) {
       status.classList.add('error');
