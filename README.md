@@ -168,3 +168,11 @@ docker compose -f docker-compose.latest.yml up -d
 ```bash
 ./bill -help
 ```
+
+## 支持
+
+如果「账单」对你有帮助，欢迎请作者喝杯咖啡～
+
+| 微信支付 |
+| --- |
+| <img src="docs/wechat-qr.png" alt="微信支付收款码" width="280"> |
