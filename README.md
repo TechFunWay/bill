@@ -1,6 +1,13 @@
 # 账单
 
+[![Release](https://img.shields.io/github/v/release/TechFunWay/bill)](https://github.com/TechFunWay/bill/releases/latest)
+[![License](https://img.shields.io/github/license/TechFunWay/bill)](LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/techfunways/bill)](https://hub.docker.com/r/techfunways/bill)
+[![Docker Image](https://img.shields.io/docker/v/techfunways/bill?sort=semver&label=docker%20image)](https://hub.docker.com/r/techfunways/bill/tags)
+
 面向个人、家庭、合租、旅行和小团队的多用户账单应用。支持个人收支统计，以及多人共同记账、灵活分摊、余额计算和补差结算；在飞牛 fnOS 上可通过 NAS 账号一键登录。
+
+> A multi-user bookkeeping app for individuals, families, roommates, travel groups and small teams: personal expense tracking, shared ledgers, flexible splitting and automatic settlement with the fewest transfers. Self-host with Docker, or deploy with one click on fnOS NAS.
 
 ## 界面预览
 
