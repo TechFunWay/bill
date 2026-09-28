@@ -9,6 +9,18 @@
 
 > A multi-user bookkeeping app for individuals, families, roommates, travel groups and small teams: personal expense tracking, shared ledgers, flexible splitting and automatic settlement with the fewest transfers. Self-host with Docker, or deploy with one click on fnOS NAS.
 
+## 下载与安装
+
+| 渠道 | 获取方式 |
+|---|---|
+| GitHub Releases | <https://github.com/TechFunWay/bill/releases> —— 各平台压缩包、飞牛 `fpk` 安装包与 `docker-compose.yml` |
+| Gitee 发行版 | <https://gitee.com/TechFunWay/bill/releases> —— 国内镜像，产物与 GitHub 一致 |
+| Docker 镜像 | `docker pull techfunways/bill:latest`（amd64 / arm64 多平台） |
+| 飞牛 fnOS | 在飞牛应用中心手动安装 Releases 里的 `.fpk` 安装包（amd64 / arm64） |
+| 官网介绍页 | <https://techfunway.wycto.cn/fnapp/bill> |
+
+> 默认端口 `8907`；数据默认是挂载目录下的 SQLite 单文件，备份即拷贝，恢复支持上传本地备份文件。
+
 ## 界面预览
 
 | 总览（深色主题） | 我的账本（浅色主题） |
