@@ -23,7 +23,7 @@
 
       <div class="rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-3">
         <div class="flex items-center justify-between gap-3">
-          <label class="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium text-white">
+          <label class="inline-flex min-h-9 cursor-pointer items-center gap-2 text-sm font-medium text-white">
             <input
               v-model="rememberLogin"
               type="checkbox"
@@ -48,7 +48,7 @@
         {{ loading ? (fnosBindingRequired ? '登录并绑定中...' : '登录中...') : (fnosBindingRequired ? '登录并绑定' : '登录') }}
       </button>
 
-      <button v-if="fnosEnabled" type="button" :disabled="loading" @click="handleFnOSLogin" class="w-full min-h-12 inline-flex items-center justify-center rounded-xl border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 disabled:cursor-not-allowed disabled:opacity-60">
+      <button v-if="fnosEnabled" type="button" :disabled="loading" @click="handleFnOSLogin" class="w-full min-h-10 inline-flex items-center justify-center rounded-xl border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 disabled:cursor-not-allowed disabled:opacity-60">
         {{ loading ? '正在获取飞牛账号…' : '使用飞牛 NAS 登录' }}
       </button>
     </form>
@@ -82,8 +82,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { bindFnOSAccount, fnosLogin, login } from '../api/auth'
+import { bindFnOSAccount, fnosIdentity, fnosLogin, login } from '../api/auth'
 import { useAuthStore } from '../stores/auth'
+import { onFnOSGatewayOrigin } from '../utils/gateway'
 import AuthShell from '../components/auth/AuthShell.vue'
 import AuthField from '../components/auth/AuthField.vue'
 
@@ -131,10 +132,28 @@ async function handleLogin() {
   }
 }
 
-// 登录页运行在应用自身端口上，无法直接拿到网关身份头；改为打开网关跳板页，
-// 跳板页签发一次性票据并带回当前 NAS 用户名，先弹确认框再登录。
-function handleFnOSLogin() {
+// 飞牛授权登录。网关域上页面本身就由网关 socket 服务出来，身份头随请求注入，
+// 就地取当前 NAS 用户即可，不必跳板；直连端口（旧书签、局域网 IP）拿不到身份
+// 头，仍整页跳到网关跳板页取一次性票据再回来。
+async function handleFnOSLogin() {
   const gatewayURL = localStorage.getItem('fnos_gateway_url')
+  if (onFnOSGatewayOrigin()) {
+    loading.value = true
+    try {
+      const res = await fnosIdentity()
+      if (res.data?.code === 0) {
+        fnosConfirmUsername.value = res.data.data?.fnos_username || ''
+        showFnOSConfirm.value = true
+      } else {
+        errorMsg.value = res.data?.message || '未获取到飞牛 NAS 登录信息'
+      }
+    } catch (err: any) {
+      errorMsg.value = err.response?.data?.message || '未获取到飞牛 NAS 登录信息，请确认已登录飞牛桌面'
+    } finally {
+      loading.value = false
+    }
+    return
+  }
   if (!gatewayURL) {
     errorMsg.value = '请先从飞牛桌面打开本应用，再使用飞牛授权登录'
     return

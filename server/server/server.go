@@ -337,9 +337,9 @@ func NewRouter(cfg config.Config, db *gorm.DB, jwtSecret string) *gin.Engine {
 	authGroup.POST("/upload", upload.HandleUpload(cfg.UploadDir))
 	appGroup.GET("/uploads/*filepath", upload.ServeUpload(cfg.UploadDir))
 
-	user.RegisterRoutes(publicGroup, optionalAuthGroup, authGroup, adminGroup, db)
+	user.RegisterRoutes(publicGroup, optionalAuthGroup, authGroup, adminGroup, db, cfg.GatewayPrefix)
 	if cfg.FnOSApp {
-		user.RegisterFnOSRoutes(publicGroup, db)
+		user.RegisterFnOSRoutes(publicGroup, db, cfg.GatewayPrefix)
 	}
 
 	// Admin operation log (browse + CSV export).
@@ -376,6 +376,28 @@ func NewRouter(cfg config.Config, db *gorm.DB, jwtSecret string) *gin.Engine {
 		})
 		r.NoRoute(func(c *gin.Context) {
 			if !cfg.FnOSApp || c.Request.URL.Path == strings.TrimSuffix(cfg.GatewayPrefix, "/") || strings.HasPrefix(c.Request.URL.Path, strings.TrimSuffix(cfg.GatewayPrefix, "/")+"/") {
+				// 网关域上把标志注入入口 HTML：前端据此跳过 Authorization 头
+				//（飞牛接入层会把它当成自己的会话令牌拦掉），会话改走服务端
+				// 种下的 HttpOnly Cookie。SPA 外壳绝不缓存，否则升级后旧包还在
+				// 跟网关说话，飞牛登录又会坏。
+				c.Header("Cache-Control", "no-store")
+				if user.IsFnOSGatewayRequest(c.Request) {
+					data, err := os.ReadFile(cfg.WebDir + "/index.html")
+					if err != nil {
+						c.String(http.StatusNotFound, "未找到前端入口")
+						return
+					}
+					flag := []byte("<script>window.__FNOS_GATEWAY__=true</script>")
+					html := string(data)
+					if idx := strings.Index(strings.ToLower(html), "<head>"); idx >= 0 {
+						insert := idx + len("<head>")
+						html = html[:insert] + string(flag) + html[insert:]
+					} else {
+						html = string(flag) + html
+					}
+					c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+					return
+				}
 				c.File(cfg.WebDir + "/index.html")
 				return
 			}

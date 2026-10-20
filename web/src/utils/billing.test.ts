@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { centsToMoney, isSplitValid, moneyToCents, splitByWeights, splitEqually, splitExactly } from './billing'
+import { describe, expect, it, vi } from 'vitest'
+import { centsToMoney, isSplitValid, loadEntryDefaults, moneyToCents, pickLastUsed, saveEntryDefaults, splitByWeights, splitEqually, splitExactly } from './billing'
 
 describe('money conversion', () => {
   it('converts decimal money without floating point leakage', () => {
@@ -50,5 +50,40 @@ describe('shared bill splits', () => {
     expect(isSplitValid('percent', 100, ids, { 11: 'not-a-number', 22: 100, 33: 0 })).toBe(false)
     expect(splitByWeights(100, ids, { 11: -1, 22: 2, 33: 0 })).toEqual([])
     expect(splitExactly(ids, { 11: '-1', 22: '2', 33: '0' })).toEqual([])
+  })
+})
+
+describe('last-entry defaults', () => {
+  const store = new Map<string, string>()
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => void store.set(key, value),
+    removeItem: (key: string) => void store.delete(key),
+    clear: () => store.clear(),
+  })
+
+  it('round-trips saved entry values per scope', () => {
+    saveEntryDefaults('personal', { kind: 'expense', ledger_id: 3, account_id: 7, category: '餐饮' })
+    expect(loadEntryDefaults('personal')).toEqual({ kind: 'expense', ledger_id: 3, account_id: 7, category: '餐饮' })
+    saveEntryDefaults('shared', { kind: 'income', ledger_id: 9, account_id: 0, category: '退款' })
+    expect(loadEntryDefaults('personal').kind).toBe('expense')
+    expect(loadEntryDefaults('shared').kind).toBe('income')
+  })
+
+  it('returns empty defaults when storage is empty or corrupted', () => {
+    store.clear()
+    expect(loadEntryDefaults('personal')).toEqual({})
+    localStorage.setItem('bill_last_entry_shared', '{broken json')
+    expect(loadEntryDefaults('shared')).toEqual({})
+    localStorage.setItem('bill_last_entry_shared', '"just a string"')
+    expect(loadEntryDefaults('shared')).toEqual({})
+  })
+
+  it('picks last-used value only when still among candidates', () => {
+    expect(pickLastUsed(7, [3, 7, 9], 3)).toBe(7)
+    expect(pickLastUsed(7, [3, 9], 3)).toBe(3)
+    expect(pickLastUsed(undefined, [3], 0)).toBe(0)
+    expect(pickLastUsed('餐饮', ['餐饮', '交通'], '')).toBe('餐饮')
+    expect(pickLastUsed('已删分类', ['餐饮'], '')).toBe('')
   })
 })

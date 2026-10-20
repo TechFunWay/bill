@@ -17,11 +17,11 @@
         </h1>
       </div>
       <div class="flex w-full gap-2 sm:w-auto">
-        <button class="btn-brand min-h-12 flex-1 sm:flex-none" @click="showQuickEntry = true">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
+        <button class="btn-brand min-h-10 flex-1 sm:flex-none" @click="showQuickEntry = true">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
           记一笔
         </button>
-        <RouterLink to="/admin/shared" class="btn-ghost min-h-12 flex-1 sm:flex-none">去共享</RouterLink>
+        <RouterLink to="/admin/shared" class="btn-ghost min-h-10 flex-1 sm:flex-none">去共享</RouterLink>
       </div>
     </header>
 
@@ -51,12 +51,13 @@
               <p class="balance-title text-sm font-bold">从第一笔开始建立你的财务轨迹</p>
               <p class="balance-kicker mt-1 text-xs">记录后，收支趋势和分类统计会自动生成。</p>
             </div>
-            <button class="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-sm font-bold text-brand-900 transition-opacity hover:opacity-90 active:opacity-75" @click="showQuickEntry = true">
+            <button class="inline-flex min-h-9 items-center gap-2 rounded-full bg-accent px-4 text-sm font-bold text-brand-900 transition-opacity hover:opacity-90 active:opacity-75" @click="showQuickEntry = true">
               开始记账
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6"/></svg>
             </button>
           </div>
           <div v-else class="relative z-10 mt-auto flex flex-wrap items-center gap-2 pt-7">
+            <RouterLink to="/admin/personal/accounts" class="balance-chip transition-opacity hover:opacity-80">账户总余额 {{ formatMoney(accountBalance) }}</RouterLink>
             <span class="balance-chip">{{ monthSummary.count }} 笔账单</span>
             <span class="balance-chip">储蓄率 {{ savingsRate }}%</span>
           </div>
@@ -177,7 +178,7 @@
             </div>
             <RouterLink
               :to="sharedSettlement.targetId ? `/admin/shared/${sharedSettlement.targetId}` : '/admin/shared'"
-              class="btn-ghost min-h-11 shrink-0"
+              class="btn-ghost min-h-9 shrink-0"
             >
               {{ sharedSettlement.unsettledCount ? '去结算' : '查看账本' }}
             </RouterLink>
@@ -187,7 +188,7 @@
               <p class="font-bold">还没有共享账本</p>
               <p class="mt-1 text-sm text-muted-foreground">旅行、合租或家庭开支，从创建账本开始。</p>
             </div>
-            <RouterLink to="/admin/shared" class="btn-ghost min-h-11">创建账本</RouterLink>
+            <RouterLink to="/admin/shared" class="btn-ghost min-h-9">创建账本</RouterLink>
           </div>
           <div v-else class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <RouterLink v-for="ledger in ledgers.slice(0, 6)" :key="ledger.id" :to="ledger.member_status === 'active' ? `/admin/shared/${ledger.id}` : '/admin/shared'" class="ledger-tile group">
@@ -228,6 +229,7 @@ const loading = ref(true)
 const showQuickEntry = ref(false)
 const toast = reactive<{ message: string; type: 'success' | 'error' }>({ message: '', type: 'success' })
 const monthSummary = ref<StatsSummary>({ income_cents: 0, expense_cents: 0, balance_cents: 0, count: 0 })
+const accountBalance = ref(0)
 const trend = ref<Array<{ month: string; income_cents: number; expense_cents: number }>>([])
 const recent = ref<PersonalTransaction[]>([])
 const ledgers = ref<LedgerListItem[]>([])
@@ -275,6 +277,7 @@ async function loadDashboard() {
     const response = await billingApi.dashboard()
     const data = response.data.data
     monthSummary.value = data.month.summary
+    accountBalance.value = data.account_balance_cents || 0
     trend.value = data.month.trend || []
     recent.value = data.recent || []
     ledgers.value = data.ledgers || []
@@ -328,7 +331,7 @@ onMounted(loadDashboard)
 .shared-card { @apply col-span-2 rounded-[1.5rem] p-4 sm:p-6 lg:col-span-4 xl:col-span-6; }
 .section-title { @apply mt-1 font-display text-xl font-extrabold tracking-tight; }
 .section-copy { @apply mt-1 text-sm text-muted-foreground; }
-.section-link { @apply inline-flex min-h-11 items-center rounded-full px-3 text-sm font-bold text-brand-700 transition-colors hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-muted; }
+.section-link { @apply inline-flex min-h-9 items-center rounded-full px-3 text-sm font-bold text-brand-700 transition-colors hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-muted; }
 .chart-bar { @apply w-[38%] min-w-1 rounded-t-full transition-[height] duration-300; }
 .chart-empty { @apply flex min-h-[13rem] flex-col items-center justify-center; }
 .empty-bars { @apply flex h-14 items-end gap-2; }

@@ -8,11 +8,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8907',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8907',
         changeOrigin: true
       },
       '/uploads': {
-        target: 'http://localhost:8907',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8907',
         changeOrigin: true
       }
     }

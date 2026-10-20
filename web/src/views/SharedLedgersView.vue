@@ -1,12 +1,12 @@
 <template>
   <div class="page-container animate-fade-in">
     <PageHeader title="共享账本" description="共同记录、按参与人分摊，系统自动算出谁该付给谁。">
-      <template #actions><button class="btn-brand min-h-11" @click="showCreate = true"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>新建账本</button></template>
+      <template #actions><button class="btn-brand min-h-9" @click="showCreate = true"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>新建账本</button></template>
     </PageHeader>
 
     <div class="inline-flex rounded-xl bg-muted p-1" role="tablist" aria-label="账本状态">
-      <button :class="ledgerStatus === 'active' ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground'" class="min-h-11 rounded-lg px-4 text-sm font-semibold" role="tab" :aria-selected="ledgerStatus === 'active'" @click="ledgerStatus = 'active'">活跃账本 <span class="ml-1 text-xs opacity-70">{{ activeLedgers.length }}</span></button>
-      <button :class="ledgerStatus === 'archived' ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground'" class="min-h-11 rounded-lg px-4 text-sm font-semibold" role="tab" :aria-selected="ledgerStatus === 'archived'" @click="ledgerStatus = 'archived'">已归档 <span class="ml-1 text-xs opacity-70">{{ archivedLedgers.length }}</span></button>
+      <button :class="ledgerStatus === 'active' ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground'" class="min-h-9 rounded-lg px-4 text-sm font-semibold" role="tab" :aria-selected="ledgerStatus === 'active'" @click="ledgerStatus = 'active'">活跃账本 <span class="ml-1 text-xs opacity-70">{{ activeLedgers.length }}</span></button>
+      <button :class="ledgerStatus === 'archived' ? 'bg-surface text-foreground shadow-sm' : 'text-muted-foreground'" class="min-h-9 rounded-lg px-4 text-sm font-semibold" role="tab" :aria-selected="ledgerStatus === 'archived'" @click="ledgerStatus = 'archived'">已归档 <span class="ml-1 text-xs opacity-70">{{ archivedLedgers.length }}</span></button>
     </div>
 
     <section v-if="invitations.length" class="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
@@ -17,7 +17,7 @@
       <div class="mt-4 grid gap-3 md:grid-cols-2">
         <div v-for="item in invitations" :key="item.id" class="flex flex-col gap-3 rounded-xl bg-surface p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-4">
           <div><strong>{{ item.name }}</strong><p class="mt-1 text-xs text-muted-foreground">{{ item.owner_username }} 邀请你加入</p></div>
-          <div class="flex w-full gap-2 sm:w-auto"><button class="btn-ghost min-h-11 flex-1 px-3 py-2 sm:flex-none" @click="respond(item, false)">拒绝</button><button class="btn-brand min-h-11 flex-1 px-3 py-2 sm:flex-none" @click="respond(item, true)">接受</button></div>
+          <div class="flex w-full gap-2 sm:w-auto"><button class="btn-ghost min-h-9 flex-1 px-3 py-2 sm:flex-none" @click="respond(item, false)">拒绝</button><button class="btn-brand min-h-9 flex-1 px-3 py-2 sm:flex-none" @click="respond(item, true)">接受</button></div>
         </div>
       </div>
     </section>
@@ -27,14 +27,14 @@
       <svg class="mb-4 h-12 w-12 text-muted-foreground/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7h16v12H4zM8 7V5h8v2M8 12h8m-8 4h5"/></svg>
       <h2 class="font-semibold text-foreground">{{ ledgerStatus === 'archived' ? '还没有已归档账本' : '还没有共享账本' }}</h2>
       <p class="mt-1 max-w-sm text-center">{{ ledgerStatus === 'archived' ? '归档账本会保留历史数据，可随时查看。' : '适合旅行、合租、家庭和团队活动，所有人都能共同记账。' }}</p>
-      <button v-if="ledgerStatus === 'active'" class="btn-brand mt-5 min-h-11" @click="showCreate = true">创建第一个账本</button>
+      <button v-if="ledgerStatus === 'active'" class="btn-brand mt-5 min-h-9" @click="showCreate = true">创建第一个账本</button>
     </div>
     <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       <RouterLink v-for="item in visibleLedgers" :key="item.id" :to="`/admin/shared/${item.id}`" class="surface group relative overflow-hidden rounded-2xl p-5 transition-all hover:-translate-y-1 hover:border-brand-300 hover:shadow-card">
         <div class="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-brand-500/8 transition-transform group-hover:scale-125"></div>
         <div class="relative flex items-start justify-between">
           <div class="flex items-center gap-3">
-            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16v12H4zM8 7V5h8v2"/></svg></span>
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-300"><svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16v12H4zM8 7V5h8v2"/></svg></span>
             <div><h2 class="font-display font-bold">{{ item.name }}</h2><p class="mt-0.5 text-xs text-muted-foreground">{{ item.member_count }} 位成员</p></div>
           </div>
           <span v-if="item.archived" class="badge bg-amber-500/10 text-amber-700 dark:text-amber-300">已归档</span>
@@ -55,7 +55,7 @@
         <label class="form-field"><span>邀请成员 <small>可选，填写用户名并用逗号分隔</small></span><textarea v-model="form.usernames" class="input-field min-h-24 resize-y" placeholder="xiaoming, xiaohong"></textarea></label>
         <p class="rounded-xl bg-muted p-3 text-xs leading-relaxed text-muted-foreground">成员会先收到邀请，接受后才能参与记账。你可以稍后继续添加成员。</p>
         <p v-if="formError" class="text-sm text-rose-600">{{ formError }}</p>
-        <div class="flex gap-3 pt-2"><button type="button" class="btn-ghost flex-1 min-h-11" @click="showCreate = false">取消</button><button class="btn-brand flex-1 min-h-11" :disabled="saving">{{ saving ? '创建中' : '创建账本' }}</button></div>
+        <div class="flex gap-3 pt-2"><button type="button" class="btn-ghost flex-1 min-h-9" @click="showCreate = false">取消</button><button class="btn-brand flex-1 min-h-9" :disabled="saving">{{ saving ? '创建中' : '创建账本' }}</button></div>
       </form>
     </Modal>
     <Toast :message="toast.message" :type="toast.type" />

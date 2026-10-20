@@ -56,11 +56,11 @@
         {{ loading ? '处理中...' : (isFnOSBinding ? (fnosMode === 'register' ? '创建并绑定' : '验证并绑定') : '注册') }}
       </button>
 
-      <button v-if="isFnOSBinding" type="button" :disabled="loading" @click="fnosMode = fnosMode === 'register' ? 'bind' : 'register'" class="w-full min-h-11 text-sm font-medium text-brand-300 hover:text-brand-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 rounded-lg transition-colors">
+      <button v-if="isFnOSBinding" type="button" :disabled="loading" @click="fnosMode = fnosMode === 'register' ? 'bind' : 'register'" class="w-full min-h-9 text-sm font-medium text-brand-300 hover:text-brand-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 rounded-lg transition-colors">
         {{ fnosMode === 'register' ? '已有应用账号？验证并绑定' : '没有应用账号？创建并绑定' }}
       </button>
 
-      <button v-else-if="fnosEnabled" type="button" :disabled="loading" @click="handleFnOSAuthorize" class="w-full min-h-12 inline-flex items-center justify-center rounded-xl border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 disabled:cursor-not-allowed disabled:opacity-60">
+      <button v-else-if="fnosEnabled" type="button" :disabled="loading" @click="handleFnOSAuthorize" class="w-full min-h-10 inline-flex items-center justify-center rounded-xl border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 disabled:cursor-not-allowed disabled:opacity-60">
         使用飞牛 NAS 授权登录
       </button>
     </form>

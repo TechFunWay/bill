@@ -51,9 +51,23 @@ func handleDashboard(db *gorm.DB) gin.HandlerFunc {
 			response.ErrorInternal(c, "获取首页数据失败")
 			return
 		}
+		var accounts []PersonalAccount
+		if err := db.Where("user_id = ? AND archived = ?", userID, false).Find(&accounts).Error; err != nil {
+			response.ErrorInternal(c, "获取首页数据失败")
+			return
+		}
+		if err := loadPersonalAccountBalances(db, userID, accounts); err != nil {
+			response.ErrorInternal(c, "获取首页数据失败")
+			return
+		}
+		var accountBalanceCents int64
+		for _, account := range accounts {
+			accountBalanceCents += account.BalanceCents
+		}
 		response.Success(c, gin.H{
-			"month":  gin.H{"summary": summary, "categories": categories, "trend": trend},
-			"recent": recent, "ledgers": ledgers, "personal_ledgers": personalLedgers, "pending_invitations": pending,
+			"month":                 gin.H{"summary": summary, "categories": categories, "trend": trend},
+			"recent":                recent, "ledgers": ledgers, "personal_ledgers": personalLedgers, "pending_invitations": pending,
+			"account_balance_cents": accountBalanceCents,
 		})
 	}
 }

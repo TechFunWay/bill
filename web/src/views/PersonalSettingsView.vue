@@ -1,17 +1,17 @@
 <template>
   <div class="page-container animate-fade-in">
     <PageHeader title="分类与标签" description="管理个人账单使用的分类和标签；账本请前往《我的账本》。">
-      <template #actions><RouterLink to="/admin/personal" class="btn-ghost min-h-11">返回个人账单</RouterLink></template>
+      <template #actions><RouterLink to="/admin/personal" class="btn-ghost min-h-9">返回个人账单</RouterLink></template>
     </PageHeader>
 
     <div class="surface grid grid-cols-2 gap-1 rounded-2xl p-1" role="tablist" aria-label="资料类型">
-      <button v-for="tab in tabs" :key="tab.key" type="button" role="tab" :aria-selected="active === tab.key" :class="active === tab.key ? 'bg-brand-800 text-white shadow-soft dark:bg-accent dark:text-brand-900' : 'text-muted-foreground hover:bg-muted'" class="min-h-11 rounded-xl px-3 text-sm font-bold transition-colors duration-200" @click="active = tab.key">{{ tab.label }}</button>
+      <button v-for="tab in tabs" :key="tab.key" type="button" role="tab" :aria-selected="active === tab.key" :class="active === tab.key ? 'bg-brand-800 text-white shadow-soft dark:bg-accent dark:text-brand-900' : 'text-muted-foreground hover:bg-muted'" class="min-h-9 rounded-xl px-3 text-sm font-bold transition-colors duration-200" @click="active = tab.key">{{ tab.label }}</button>
     </div>
 
     <section class="surface rounded-2xl p-4 sm:p-6">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div><h2 class="font-display text-xl font-bold">{{ currentTab.title }}</h2><p class="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{{ currentTab.description }}</p></div>
-        <button class="btn-brand min-h-11 shrink-0" @click="openCreate">添加{{ currentTab.itemLabel }}</button>
+        <button class="btn-brand min-h-9 shrink-0" @click="openCreate">添加{{ currentTab.itemLabel }}</button>
       </div>
 
       <div v-if="loading" class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3"><div v-for="n in 3" :key="n" class="h-32 animate-pulse rounded-2xl bg-muted"></div></div>
@@ -32,9 +32,9 @@
       <form class="space-y-4" @submit.prevent="save">
         <label v-if="active === 'categories'" class="form-field"><span>上级分类 <small>可选</small></span><select ref="parentSelect" v-model.number="form.parent_id" class="input-field" @change="syncKindFromParent"><option :value="0">无，作为一级分类</option><option v-for="item in availableParents" :key="item.id" :value="item.id">{{ item.kind === 'income' ? '收入' : '支出' }} · {{ item.name }}</option></select><small class="text-xs text-muted-foreground">选择上级后会自动继承其收支类型，并作为二级分类。</small></label>
         <label class="form-field"><span>{{ active === 'categories' ? '分类名称' : '标签名称' }}</span><input ref="nameInput" v-model="form.name" required maxlength="40" class="input-field" :placeholder="currentTab.placeholder" /></label>
-        <fieldset v-if="active === 'categories'"><legend class="text-sm font-semibold">收支类型</legend><div class="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-muted p-1" role="radiogroup"><button type="button" role="radio" :disabled="kindLocked" :aria-checked="form.kind === 'expense'" :class="form.kind === 'expense' ? 'bg-surface text-rose-600 shadow-sm' : 'text-muted-foreground'" class="min-h-11 rounded-lg text-sm font-semibold disabled:opacity-50" @click="form.kind = 'expense'">支出</button><button type="button" role="radio" :disabled="kindLocked" :aria-checked="form.kind === 'income'" :class="form.kind === 'income' ? 'bg-surface text-emerald-600 shadow-sm' : 'text-muted-foreground'" class="min-h-11 rounded-lg text-sm font-semibold disabled:opacity-50" @click="form.kind = 'income'">收入</button></div><small v-if="form.parent_id" class="mt-1 block text-xs text-muted-foreground">二级分类的收支类型跟随上级分类。</small><small v-else-if="editing?.transaction_count" class="mt-1 block text-xs text-muted-foreground">已有账单使用时不能修改收支类型。</small></fieldset>
+        <fieldset v-if="active === 'categories'"><legend class="text-sm font-semibold">收支类型</legend><div class="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-muted p-1" role="radiogroup"><button type="button" role="radio" :disabled="kindLocked" :aria-checked="form.kind === 'expense'" :class="form.kind === 'expense' ? 'bg-surface text-rose-600 shadow-sm' : 'text-muted-foreground'" class="min-h-9 rounded-lg text-sm font-semibold disabled:opacity-50" @click="form.kind = 'expense'">支出</button><button type="button" role="radio" :disabled="kindLocked" :aria-checked="form.kind === 'income'" :class="form.kind === 'income' ? 'bg-surface text-emerald-600 shadow-sm' : 'text-muted-foreground'" class="min-h-9 rounded-lg text-sm font-semibold disabled:opacity-50" @click="form.kind = 'income'">收入</button></div><small v-if="form.parent_id" class="mt-1 block text-xs text-muted-foreground">二级分类的收支类型跟随上级分类。</small><small v-else-if="editing?.transaction_count" class="mt-1 block text-xs text-muted-foreground">已有账单使用时不能修改收支类型。</small></fieldset>
         <p v-if="formError" role="alert" class="text-sm text-rose-600">{{ formError }}</p>
-        <div class="flex gap-3 pt-2"><button type="button" class="btn-ghost min-h-11 flex-1" @click="showForm = false">取消</button><button class="btn-brand min-h-11 flex-1" :disabled="saving">{{ saving ? '保存中' : '保存' }}</button></div>
+        <div class="flex gap-3 pt-2"><button type="button" class="btn-ghost min-h-9 flex-1" @click="showForm = false">取消</button><button class="btn-brand min-h-9 flex-1" :disabled="saving">{{ saving ? '保存中' : '保存' }}</button></div>
       </form>
     </Modal>
     <ConfirmDialog v-model="showDelete" :title="`删除${currentTab.itemLabel}？`" :message="deleteMessage" confirm-text="确认删除" confirm-type="danger" @confirm="deleteItem" />

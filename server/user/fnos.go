@@ -277,7 +277,7 @@ func setFnOSAuditContext(c *gin.Context, result map[string]interface{}) {
 	}
 }
 
-func RegisterFnOSRoutes(public *gin.RouterGroup, db *gorm.DB) {
+func RegisterFnOSRoutes(public *gin.RouterGroup, db *gorm.DB, gatewayPrefix string) {
 	// Minted only for requests that arrived through the gateway unix socket:
 	// the browser session was already verified by fnOS and the identity headers
 	// cannot be forged there. Tickets let the SPA on the plain TCP port log in
@@ -361,6 +361,8 @@ func RegisterFnOSRoutes(public *gin.RouterGroup, db *gorm.DB) {
 		setFnOSAuditContext(c, result)
 		audit.Log(db, c, "fnos_login", "user", c.GetUint("userID"), "飞牛 NAS 登录")
 		consumeFnOSTicket(c.GetHeader("X-FnOS-Ticket"))
+		// 网关域上飞牛授权登录的会话同样走 HttpOnly Cookie（Authorization 会被拦）。
+		issueSessionCookie(c, db, gatewayPrefix, result, remember)
 		response.Success(c, result)
 	})
 
@@ -398,6 +400,8 @@ func RegisterFnOSRoutes(public *gin.RouterGroup, db *gorm.DB) {
 		setFnOSAuditContext(c, result)
 		audit.Log(db, c, "fnos_bind", "user", c.GetUint("userID"), "绑定飞牛 NAS 账号")
 		consumeFnOSTicket(c.GetHeader("X-FnOS-Ticket"))
+		// 绑定成功后同样要在网关域维持登录态（绑定流程等价于一次登录）。
+		issueSessionCookie(c, db, gatewayPrefix, result, remember)
 		response.Success(c, result)
 	})
 }

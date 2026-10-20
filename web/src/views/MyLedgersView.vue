@@ -2,8 +2,8 @@
   <div class="page-container animate-fade-in">
     <PageHeader title="我的账本" description="为不同生活场景建立独立账本，并用封面和顺序快速找到它们。">
       <template #actions>
-        <button type="button" class="btn-brand min-h-11" @click="openCreate">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m-7-7h14" /></svg>
+        <button type="button" class="btn-brand min-h-9" @click="openCreate">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m-7-7h14" /></svg>
           新增账本
         </button>
       </template>
@@ -65,7 +65,7 @@
                 <button type="button" class="icon-button" :disabled="index === activeLedgers.length - 1 || reordering" :aria-label="`${ledger.name}向后移动`" @click="moveLedger(index, 1)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 18 6-6-6-6" /></svg></button>
                 <span class="hidden cursor-grab items-center gap-1 px-2 text-xs text-muted-foreground lg:flex"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01" /></svg>拖动</span>
               </div>
-              <button type="button" class="min-h-11 rounded-full px-3 text-sm font-bold text-rose-600 disabled:pointer-events-none disabled:opacity-35" :disabled="ledger.is_default" :title="ledger.is_default ? '默认账本不能归档' : undefined" @click="askArchive(ledger)">归档</button>
+              <button type="button" class="min-h-9 rounded-full px-3 text-sm font-bold text-rose-600 disabled:pointer-events-none disabled:opacity-35" :disabled="ledger.is_default" :title="ledger.is_default ? '默认账本不能归档' : undefined" @click="askArchive(ledger)">归档</button>
             </div>
           </div>
         </article>
@@ -78,7 +78,7 @@
         <div v-for="ledger in archivedLedgers" :key="ledger.id" class="flex min-h-16 items-center gap-3 py-3">
           <span class="h-11 w-16 shrink-0 rounded-xl border border-white/10" :style="coverStyle(ledger.cover)" aria-hidden="true"></span>
           <div class="min-w-0 flex-1"><p class="truncate font-bold">{{ ledger.name }}</p><p class="text-xs text-muted-foreground">{{ ledger.transaction_count || 0 }} 笔账单</p></div>
-          <button type="button" class="btn-ghost min-h-11 px-4" @click="restoreLedger(ledger)">恢复</button>
+          <button type="button" class="btn-ghost min-h-9 px-4" @click="restoreLedger(ledger)">恢复</button>
         </div>
       </div>
     </section>
@@ -93,7 +93,7 @@
           <div class="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="选择封面样式">
             <button v-for="preset in coverPresets" :key="preset.key" type="button" role="radio" :aria-checked="!coverFile && form.cover === preset.key" :aria-label="preset.label" :class="!coverFile && form.cover === preset.key ? 'ring-4 ring-brand-500/30' : 'hover:-translate-y-0.5'" class="h-16 rounded-xl border border-border transition duration-200" :style="coverStyle(preset.key)" @click="selectPreset(preset.key)"><span class="sr-only">{{ preset.label }}</span></button>
           </div>
-          <label class="mt-3 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/35 px-4 text-sm font-bold transition-colors hover:border-brand-400 hover:bg-muted">
+          <label class="mt-3 flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-muted/35 px-4 text-sm font-bold transition-colors hover:border-brand-400 hover:bg-muted">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4-4 4 4 4-5 4 5M5 20h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" /></svg>
             {{ hasCustomCover ? '更换自定义封面' : '上传自定义封面' }}
             <input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" @change="onCoverFile" />
@@ -103,7 +103,7 @@
         </fieldset>
 
         <p v-if="formError" role="alert" class="text-sm font-medium text-rose-600">{{ formError }}</p>
-        <div class="flex gap-3 pt-1"><button type="button" class="btn-ghost min-h-11 flex-1" @click="showForm = false">取消</button><button type="submit" class="btn-brand min-h-11 flex-1" :disabled="saving">{{ saving ? (coverFile ? '上传并保存中…' : '保存中…') : '保存账本' }}</button></div>
+        <div class="flex gap-3 pt-1"><button type="button" class="btn-ghost min-h-9 flex-1" @click="showForm = false">取消</button><button type="submit" class="btn-brand min-h-9 flex-1" :disabled="saving">{{ saving ? (coverFile ? '上传并保存中…' : '保存中…') : '保存账本' }}</button></div>
       </form>
     </Modal>
 

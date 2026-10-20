@@ -2,6 +2,7 @@ package billing
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -274,11 +275,12 @@ func handleGetLedger(db *gorm.DB) gin.HandlerFunc {
 		var totals struct {
 			ExpenseCents int64 `json:"expense_cents"`
 			IncomeCents  int64 `json:"income_cents"`
+			BalanceCents int64 `json:"balance_cents"`
 			ExpenseCount int64 `json:"expense_count"`
 			IncomeCount  int64 `json:"income_count"`
 		}
 		if err := db.Model(&SharedTransaction{}).Where("ledger_id = ?", ledgerID).
-			Select("COALESCE(SUM(CASE WHEN kind = ? THEN amount_cents ELSE 0 END), 0) AS expense_cents, COALESCE(SUM(CASE WHEN kind = ? THEN amount_cents ELSE 0 END), 0) AS income_cents, COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS expense_count, COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS income_count", KindExpense, KindIncome, KindExpense, KindIncome).
+			Select("COALESCE(SUM(CASE WHEN kind = ? THEN amount_cents ELSE 0 END), 0) AS expense_cents, COALESCE(SUM(CASE WHEN kind = ? THEN amount_cents ELSE 0 END), 0) AS income_cents, COALESCE(SUM(CASE WHEN kind = ? THEN amount_cents ELSE -amount_cents END), 0) AS balance_cents, COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS expense_count, COALESCE(SUM(CASE WHEN kind = ? THEN 1 ELSE 0 END), 0) AS income_count", KindExpense, KindIncome, KindIncome, KindExpense, KindIncome).
 			Scan(&totals).Error; err != nil {
 			response.ErrorInternal(c, "获取共享账单失败")
 			return
@@ -874,6 +876,25 @@ func handleCreateSettlement(db *gorm.DB) gin.HandlerFunc {
 		occurredAt, err := parseOccurredAt(req.OccurredAt)
 		if err != nil {
 			response.ErrorBadRequest(c, "结算时间格式不正确")
+			return
+		}
+		// 方向防呆：欠款方（负余额）付款给应收方（正余额），录反会把余额双倍反向累计。
+		balances, err := calculateBalances(db, ledgerID)
+		if err != nil {
+			response.ErrorInternal(c, "计算成员余额失败")
+			return
+		}
+		balanceOf := make(map[uint]balanceView, len(balances))
+		for _, view := range balances {
+			balanceOf[view.UserID] = view
+		}
+		fromBalance, toBalance := balanceOf[req.FromUserID], balanceOf[req.ToUserID]
+		if fromBalance.BalanceCents >= 0 || toBalance.BalanceCents <= 0 {
+			response.ErrorBadRequest(c, fmt.Sprintf(
+				"结算方向不符：%s，%s。付款成员应为欠款方，收款成员应为应收方",
+				memberBalanceSummary(fromBalance.Username, fromBalance.BalanceCents),
+				memberBalanceSummary(toBalance.Username, toBalance.BalanceCents),
+			))
 			return
 		}
 		item := Settlement{

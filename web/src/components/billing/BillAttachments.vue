@@ -26,7 +26,7 @@
 
     <div v-if="!readonly && !compact" class="mt-2 grid gap-2" :class="modelValue.length ? '' : 'mt-0'">
       <input ref="fileInput" class="sr-only" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple @change="handleFiles" />
-      <button type="button" class="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-4 text-sm font-semibold text-muted-foreground transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/20" :disabled="uploading || modelValue.length >= maxAttachments" @click="fileInput?.click()">
+      <button type="button" class="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-4 text-sm font-semibold text-muted-foreground transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-900/20" :disabled="uploading || modelValue.length >= maxAttachments" @click="fileInput?.click()">
         <svg v-if="!uploading" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.5M12 3v13m-4-9 4-4 4 4"/></svg>
         <svg v-else class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"/><path class="opacity-75" fill="currentColor" d="M21 12a9 9 0 0 0-9-9v3a6 6 0 0 1 6 6z"/></svg>
         {{ uploading ? '图片上传中…' : modelValue.length ? '继续添加图片' : '选择多张图片' }}
@@ -47,7 +47,7 @@
         </div>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p class="truncate text-sm text-muted-foreground">{{ previewItem.name }}</p>
-          <a class="btn-brand min-h-11 shrink-0" :href="assetUrl(previewItem.path)" :download="previewItem.name || '账单图片'">
+          <a class="btn-brand min-h-9 shrink-0" :href="assetUrl(previewItem.path)" :download="previewItem.name || '账单图片'">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m-4-4 4 4 4-4M5 20h14"/></svg>
             下载原图
           </a>

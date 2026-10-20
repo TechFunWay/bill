@@ -129,6 +129,56 @@ type personalAccountRequest struct {
 	Identifier  string `json:"identifier"`
 	CardKind    string `json:"card_kind"`
 	CardNumber  string `json:"card_number"`
+	// OpeningBalanceCents 为空指针表示保持原值，仅在更新接口生效。
+	OpeningBalanceCents *int64 `json:"opening_balance_cents"`
+}
+
+// maxMoneyCents 与个人账单金额上限保持一致，允许负数以表达信用卡欠款等场景。
+const maxMoneyCents = 999999999999
+
+func normalizeOpeningBalance(value *int64) (int64, error) {
+	if value == nil {
+		return 0, nil
+	}
+	if *value < -maxMoneyCents || *value > maxMoneyCents {
+		return 0, errors.New("初始余额数值超出范围")
+	}
+	return *value, nil
+}
+
+// loadPersonalAccountBalances fills BalanceCents for each account as opening
+// balance plus income minus expense, using one grouped query for all accounts.
+func loadPersonalAccountBalances(db *gorm.DB, userID uint, items []PersonalAccount) error {
+	if len(items) == 0 {
+		return nil
+	}
+	ids := make([]uint, 0, len(items))
+	for _, item := range items {
+		ids = append(ids, item.ID)
+	}
+	var rows []struct {
+		AccountID uint
+		Kind      string
+		Total     int64
+	}
+	if err := db.Model(&PersonalTransaction{}).
+		Select("account_id, kind, COALESCE(SUM(amount_cents), 0) AS total").
+		Where("user_id = ? AND account_id IN ?", userID, ids).
+		Group("account_id, kind").Scan(&rows).Error; err != nil {
+		return err
+	}
+	net := make(map[uint]int64, len(items))
+	for _, row := range rows {
+		if row.Kind == KindIncome {
+			net[row.AccountID] += row.Total
+		} else {
+			net[row.AccountID] -= row.Total
+		}
+	}
+	for i := range items {
+		items[i].BalanceCents = items[i].OpeningBalanceCents + net[items[i].ID]
+	}
+	return nil
 }
 
 func normalizePersonalAccount(req personalAccountRequest) (PersonalAccount, error) {
@@ -277,6 +327,10 @@ func handleListPersonalAccounts(db *gorm.DB) gin.HandlerFunc {
 				return
 			}
 		}
+		if err := loadPersonalAccountBalances(db, c.GetUint("userID"), items); err != nil {
+			response.ErrorInternal(c, "获取账户失败")
+			return
+		}
 		response.Success(c, items)
 	}
 }
@@ -293,6 +347,12 @@ func handleCreatePersonalAccount(db *gorm.DB) gin.HandlerFunc {
 			response.ErrorBadRequest(c, err.Error())
 			return
 		}
+		openingBalance, err := normalizeOpeningBalance(req.OpeningBalanceCents)
+		if err != nil {
+			response.ErrorBadRequest(c, err.Error())
+			return
+		}
+		account.OpeningBalanceCents = openingBalance
 		account.UserID = c.GetUint("userID")
 		if account.Type == AccountTypeBankCard {
 			if strings.TrimSpace(req.CardNumber) != "" {
@@ -320,6 +380,7 @@ func handleCreatePersonalAccount(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		audit.Log(db, c, "personal_account_create", "personal_account", account.ID, "新增记账账户")
+		account.BalanceCents = account.OpeningBalanceCents
 		response.Success(c, account)
 	}
 }
@@ -369,6 +430,14 @@ func handleUpdatePersonalAccount(db *gorm.DB) gin.HandlerFunc {
 			account.CardFingerprint = nil
 		}
 		updates := map[string]interface{}{"type": account.Type, "name": account.Name, "institution": account.Institution, "identifier": account.Identifier, "card_kind": account.CardKind, "card_fingerprint": account.CardFingerprint}
+		if req.OpeningBalanceCents != nil {
+			openingBalance, err := normalizeOpeningBalance(req.OpeningBalanceCents)
+			if err != nil {
+				response.ErrorBadRequest(c, err.Error())
+				return
+			}
+			updates["opening_balance_cents"] = openingBalance
+		}
 		if err := db.Model(&existing).Updates(updates).Error; err != nil {
 			if message := personalAccountConflictMessage(err); message != "" {
 				response.ErrorBadRequest(c, message)
@@ -378,7 +447,12 @@ func handleUpdatePersonalAccount(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		db.First(&existing, existing.ID)
-		response.Success(c, existing)
+		balances := []PersonalAccount{existing}
+		if err := loadPersonalAccountBalances(db, c.GetUint("userID"), balances); err != nil {
+			response.ErrorInternal(c, "更新账户失败")
+			return
+		}
+		response.Success(c, balances[0])
 	}
 }
 

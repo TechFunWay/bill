@@ -26,6 +26,68 @@ func TestPersonalAccountConflictMessage(t *testing.T) {
 	}
 }
 
+func TestNormalizeOpeningBalance(t *testing.T) {
+	opening := int64(15000)
+	if got, err := normalizeOpeningBalance(&opening); err != nil || got != 15000 {
+		t.Fatalf("normalizeOpeningBalance(15000) = %d, %v", got, err)
+	}
+	if got, err := normalizeOpeningBalance(nil); err != nil || got != 0 {
+		t.Fatalf("normalizeOpeningBalance(nil) = %d, %v", got, err)
+	}
+	outOfRange := int64(maxMoneyCents) + 1
+	if _, err := normalizeOpeningBalance(&outOfRange); err == nil {
+		t.Fatal("expected out-of-range opening balance to fail")
+	}
+	negative := int64(-500)
+	if got, err := normalizeOpeningBalance(&negative); err != nil || got != -500 {
+		t.Fatalf("negative opening balance should be allowed, got %d, %v", got, err)
+	}
+}
+
+func TestLoadPersonalAccountBalances(t *testing.T) {
+	db, err := database.InitDB(filepath.Join(t.TempDir(), "billing-account-balance.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.CloseDB(db)
+	if err := database.AutoMigrate(db); err != nil {
+		t.Fatal(err)
+	}
+	user := database.User{Username: "balance-owner", Password: "test"}
+	if err := db.Create(&user).Error; err != nil {
+		t.Fatal(err)
+	}
+	accounts := []PersonalAccount{
+		{UserID: user.ID, Type: AccountTypeWechat, Name: "日常微信", Institution: "微信", OpeningBalanceCents: 10000},
+		{UserID: user.ID, Type: AccountTypeAlipay, Name: "生活支付宝", Institution: "支付宝", OpeningBalanceCents: -2000},
+		{UserID: user.ID, Type: AccountTypeWechat, Name: "无流水账户", Institution: "微信"},
+	}
+	for i := range accounts {
+		if err := db.Create(&accounts[i]).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	transactions := []PersonalTransaction{
+		{UserID: user.ID, AccountID: accounts[0].ID, Kind: KindIncome, AmountCents: 5000, Category: "工资", OccurredAt: time.Now()},
+		{UserID: user.ID, AccountID: accounts[0].ID, Kind: KindExpense, AmountCents: 3000, Category: "餐饮", OccurredAt: time.Now()},
+		{UserID: user.ID, AccountID: accounts[1].ID, Kind: KindExpense, AmountCents: 800, Category: "交通", OccurredAt: time.Now()},
+	}
+	for i := range transactions {
+		if err := db.Create(&transactions[i]).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := loadPersonalAccountBalances(db, user.ID, accounts); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]int64{"日常微信": 12000, "生活支付宝": -2800, "无流水账户": 0}
+	for _, account := range accounts {
+		if account.BalanceCents != want[account.Name] {
+			t.Fatalf("account %q balance = %d, want %d", account.Name, account.BalanceCents, want[account.Name])
+		}
+	}
+}
+
 func TestNormalizeSharesEqualKeepsExactTotal(t *testing.T) {
 	shares, err := normalizeShares(100, nil, []uint{1, 2, 3})
 	if err != nil {
@@ -142,6 +204,79 @@ func TestSuggestTransfersMinimizesSimpleBalances(t *testing.T) {
 	}
 	if total != 700 {
 		t.Fatalf("got transfer total %d, want 700", total)
+	}
+}
+
+// 复现粉丝反馈场景:共同收入记在 A 名下、共同支出由 B 垫付并均分。
+// A 代收 1000 只应得 500、支出分摊 250,因此 A 应付 750 给 B,方向不能颠倒。
+func TestCalculateBalancesOffsetsSharedIncomeAndExpense(t *testing.T) {
+	db, err := database.InitDB(filepath.Join(t.TempDir(), "shared-balance-offset.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.CloseDB(db)
+	if err := database.AutoMigrate(db); err != nil {
+		t.Fatal(err)
+	}
+
+	users := []database.User{{Username: "alice", Password: "test"}, {Username: "bob", Password: "test"}}
+	for i := range users {
+		if err := db.Create(&users[i]).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	aliceID, bobID := users[0].ID, users[1].ID
+	ledger := SharedLedger{Name: "家庭账本", OwnerUserID: aliceID}
+	if err := db.Create(&ledger).Error; err != nil {
+		t.Fatal(err)
+	}
+	members := []SharedMember{
+		{LedgerID: ledger.ID, UserID: aliceID, Role: MemberOwner, Status: MemberActive},
+		{LedgerID: ledger.ID, UserID: bobID, Role: MemberRegular, Status: MemberActive},
+	}
+	if err := db.Create(&members).Error; err != nil {
+		t.Fatal(err)
+	}
+	income := SharedTransaction{LedgerID: ledger.ID, CreatedBy: aliceID, Kind: KindIncome,
+		ActorUserID: aliceID, AmountCents: 1000, Category: "共同收入", OccurredAt: time.Now()}
+	if err := db.Create(&income).Error; err != nil {
+		t.Fatal(err)
+	}
+	expense := SharedTransaction{LedgerID: ledger.ID, CreatedBy: bobID, Kind: KindExpense,
+		ActorUserID: bobID, AmountCents: 500, Category: "聚餐", OccurredAt: time.Now()}
+	if err := db.Create(&expense).Error; err != nil {
+		t.Fatal(err)
+	}
+	shares := []SharedShare{
+		{TransactionID: income.ID, UserID: aliceID, AmountCents: 500},
+		{TransactionID: income.ID, UserID: bobID, AmountCents: 500},
+		{TransactionID: expense.ID, UserID: aliceID, AmountCents: 250},
+		{TransactionID: expense.ID, UserID: bobID, AmountCents: 250},
+	}
+	if err := db.Create(&shares).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	balances, err := calculateBalances(db, ledger.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	byUser := make(map[uint]balanceView, len(balances))
+	for _, view := range balances {
+		byUser[view.UserID] = view
+	}
+	alice, bob := byUser[aliceID], byUser[bobID]
+	if alice.BalanceCents != -750 || bob.BalanceCents != 750 {
+		t.Fatalf("balances alice=%d bob=%d, want -750/750", alice.BalanceCents, bob.BalanceCents)
+	}
+	if alice.ReceivedCents != 1000 || alice.AdvancedCents != 0 || bob.ReceivedCents != 0 || bob.AdvancedCents != 500 {
+		t.Fatalf("handled amounts alice=(adv %d, recv %d) bob=(adv %d, recv %d)",
+			alice.AdvancedCents, alice.ReceivedCents, bob.AdvancedCents, bob.ReceivedCents)
+	}
+
+	transfers := suggestTransfers(balances)
+	if len(transfers) != 1 || transfers[0].FromUserID != aliceID || transfers[0].ToUserID != bobID || transfers[0].AmountCents != 750 {
+		t.Fatalf("suggested transfers = %#v, want alice->bob 750", transfers)
 	}
 }
 

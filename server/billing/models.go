@@ -22,7 +22,9 @@ const (
 )
 
 // PersonalTransaction is an income or expense owned by exactly one user.
-// AmountCents is always positive; Kind determines the direction.
+// AmountCents is always positive; Kind determines the direction. Source and
+// ExternalID identify transactions imported from an Alipay or WeChat bill CSV
+// so repeated imports can be deduplicated; both stay empty for manual entries.
 type PersonalTransaction struct {
 	ID          uint             `gorm:"primarykey" json:"id"`
 	UserID      uint             `gorm:"not null;index:idx_personal_user_time" json:"user_id"`
@@ -33,6 +35,8 @@ type PersonalTransaction struct {
 	Category    string           `gorm:"size:64;not null;index" json:"category"`
 	Note        string           `gorm:"size:500" json:"note"`
 	OccurredAt  time.Time        `gorm:"not null;index:idx_personal_user_time" json:"occurred_at"`
+	Source      string           `gorm:"size:20;not null;default:'';index:idx_personal_import_dedup,priority:1" json:"source"`
+	ExternalID  string           `gorm:"size:64;not null;default:'';index:idx_personal_import_dedup,priority:2" json:"external_id"`
 	CreatedAt   time.Time        `json:"created_at"`
 	UpdatedAt   time.Time        `json:"updated_at"`
 	LedgerName  string           `gorm:"-" json:"ledger_name"`
@@ -45,19 +49,24 @@ type PersonalTransaction struct {
 // PersonalAccount is a bookkeeping account reference. It intentionally stores
 // only display metadata: when supplied, complete card numbers are reduced to a
 // keyed fingerprint plus last four digits, and no payment credentials are retained.
+// OpeningBalanceCents is the balance when the account starts being tracked; the
+// current balance is always derived as opening balance plus income minus
+// expense, never stored, so edits and deletes of transactions stay consistent.
 type PersonalAccount struct {
-	ID               uint      `gorm:"primarykey" json:"id"`
-	UserID           uint      `gorm:"not null;index;uniqueIndex:idx_personal_account_user_name;uniqueIndex:idx_personal_account_user_card" json:"user_id"`
-	Type             string    `gorm:"size:20;not null;index" json:"type"`
-	Name             string    `gorm:"size:80;not null;uniqueIndex:idx_personal_account_user_name" json:"name"`
-	Institution      string    `gorm:"size:80;not null" json:"institution"`
-	Identifier       string    `gorm:"size:64" json:"identifier"`
-	CardKind         string    `gorm:"size:16;not null;default:''" json:"card_kind"`
-	CardFingerprint  *string   `gorm:"size:64;uniqueIndex:idx_personal_account_user_card" json:"-"`
-	Archived         bool      `gorm:"not null;default:false;index" json:"archived"`
-	TransactionCount int64     `gorm:"-" json:"transaction_count"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	ID                  uint      `gorm:"primarykey" json:"id"`
+	UserID              uint      `gorm:"not null;index;uniqueIndex:idx_personal_account_user_name;uniqueIndex:idx_personal_account_user_card" json:"user_id"`
+	Type                string    `gorm:"size:20;not null;index" json:"type"`
+	Name                string    `gorm:"size:80;not null;uniqueIndex:idx_personal_account_user_name" json:"name"`
+	Institution         string    `gorm:"size:80;not null" json:"institution"`
+	Identifier          string    `gorm:"size:64" json:"identifier"`
+	CardKind            string    `gorm:"size:16;not null;default:''" json:"card_kind"`
+	CardFingerprint     *string   `gorm:"size:64;uniqueIndex:idx_personal_account_user_card" json:"-"`
+	OpeningBalanceCents int64     `gorm:"not null;default:0" json:"opening_balance_cents"`
+	Archived            bool      `gorm:"not null;default:false;index" json:"archived"`
+	TransactionCount    int64     `gorm:"-" json:"transaction_count"`
+	BalanceCents        int64     `gorm:"-" json:"balance_cents"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
 }
 
 // PersonalLedger is private to one user. It is deliberately separate from

@@ -3,19 +3,19 @@
     <legend class="text-sm font-semibold">标签 <small class="font-normal text-muted-foreground">可多选，回车可新增</small></legend>
     <div class="mt-2 rounded-2xl border border-border bg-surface p-2 focus-within:ring-3 focus-within:ring-brand-500/25">
       <div v-if="selectedTags.length" class="mb-2 flex flex-wrap gap-2">
-        <span v-for="tag in selectedTags" :key="tag.id" class="inline-flex min-h-11 items-center gap-1 rounded-full bg-brand-100 pl-3 pr-1 text-sm font-semibold text-brand-800 dark:bg-brand-800 dark:text-accent">
+        <span v-for="tag in selectedTags" :key="tag.id" class="inline-flex min-h-9 items-center gap-1 rounded-full bg-brand-100 pl-3 pr-1 text-sm font-semibold text-brand-800 dark:bg-brand-800 dark:text-accent">
           {{ tag.name }}
           <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full hover:bg-black/10" :aria-label="`移除标签 ${tag.name}`" @click="remove(tag.id)"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 7 10 10M17 7 7 17" stroke-width="2" stroke-linecap="round"/></svg></button>
         </span>
       </div>
-      <div class="flex min-h-11 items-center gap-2 px-2">
+      <div class="flex min-h-9 items-center gap-2 px-2">
         <svg class="h-5 w-5 shrink-0 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M20 13 13 20 4 11V4h7l9 9Z" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/></svg>
         <input v-model="query" maxlength="50" class="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground" autocomplete="off" placeholder="输入标签名称，按回车添加" @keydown.enter.prevent="commit" @keydown.backspace="removeLast" />
         <span v-if="creating" class="text-xs text-muted-foreground">添加中</span>
       </div>
     </div>
     <div v-if="suggestions.length" class="mt-2 flex flex-wrap gap-2" aria-label="可选标签">
-      <button v-for="tag in suggestions" :key="tag.id" type="button" class="min-h-11 touch-manipulation rounded-full border border-border px-3 text-sm text-muted-foreground hover:border-brand-500 hover:text-foreground" @click="add(tag.id)">+ {{ tag.name }}</button>
+      <button v-for="tag in suggestions" :key="tag.id" type="button" class="min-h-9 touch-manipulation rounded-full border border-border px-3 text-sm text-muted-foreground hover:border-brand-500 hover:text-foreground" @click="add(tag.id)">+ {{ tag.name }}</button>
     </div>
     <p v-if="error" role="alert" class="mt-2 text-sm text-rose-600">{{ error }}</p>
   </fieldset>
