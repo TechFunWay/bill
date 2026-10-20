@@ -60,7 +60,7 @@
           <p class="text-sm text-muted-foreground">用于以编程方式访问接口，请妥善保管，泄露后请立即重新生成。</p>
           <div v-if="apiKey" class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <code class="flex-1 px-3.5 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground font-mono break-all">{{ apiKey }}</code>
-            <button @click="copyApiKey" class="btn-ghost min-h-11 shrink-0 !px-3 !py-2.5">复制</button>
+            <button @click="copyApiKey" class="btn-ghost min-h-9 shrink-0 !px-3 !py-2.5">复制</button>
           </div>
           <p v-if="apiKeyMsg" :class="apiKeySuccess ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'" class="text-sm">{{ apiKeyMsg }}</p>
           <button @click="handleRegenerateApiKey" :disabled="apiKeyLoading" class="btn-brand">{{ apiKeyLoading ? '生成中...' : '重新生成 API Key' }}</button>
@@ -169,8 +169,8 @@ async function handleChangePassword() {
       oldPassword.value = ''
       newPassword.value = ''
       confirmPassword.value = ''
-      setTimeout(() => {
-        authStore.logout()
+      setTimeout(async () => {
+        await authStore.logout()
         router.push('/login')
       }, 800)
     } else {

@@ -7,7 +7,7 @@
           role="radio"
           :aria-checked="form.kind === 'expense'"
           :class="form.kind === 'expense' ? 'bg-surface text-destructive shadow-sm' : 'text-muted-foreground'"
-          class="min-h-11 rounded-lg text-sm font-semibold transition-colors duration-200"
+          class="min-h-9 rounded-lg text-sm font-semibold transition-colors duration-200"
           @click="setKind('expense')"
         >
           支出
@@ -17,7 +17,7 @@
           role="radio"
           :aria-checked="form.kind === 'income'"
           :class="form.kind === 'income' ? 'bg-surface text-emerald-700 shadow-sm dark:text-emerald-300' : 'text-muted-foreground'"
-          class="min-h-11 rounded-lg text-sm font-semibold transition-colors duration-200"
+          class="min-h-9 rounded-lg text-sm font-semibold transition-colors duration-200"
           @click="setKind('income')"
         >
           收入
@@ -36,9 +36,13 @@
         <span>收支账户</span>
         <select v-model.number="form.account_id" required class="input-field" :disabled="resourcesLoading">
           <option :value="0" disabled>{{ resourcesLoading ? '加载中' : '请选择账户' }}</option>
-          <option v-for="item in accounts" :key="item.id" :value="item.id">{{ item.name }} · {{ accountDetail(item) }}</option>
+          <option v-for="item in accounts" :key="item.id" :value="item.id">{{ item.name }} · {{ accountDetail(item) }} · 结余 {{ formatMoney(item.balance_cents || 0) }}</option>
         </select>
       </label>
+      <p v-if="selectedAccount" class="rounded-xl bg-muted px-3 py-2 text-xs leading-5 text-muted-foreground">
+        <template v-if="!selectedAccount.opening_balance_cents && !selectedAccount.transaction_count">「{{ selectedAccount.name }}」还没有初始余额，可到 <RouterLink to="/admin/personal/accounts" class="font-semibold underline">账户管理</RouterLink> 设置，设置后这里会显示结余。</template>
+        <template v-else>「{{ selectedAccount.name }}」当前结余 <span class="font-mono font-semibold tabular-nums">{{ formatMoney(selectedAccount.balance_cents || 0) }}</span><template v-if="moneyToCents(form.amount) > 0">，此笔{{ form.kind === 'expense' ? '支出' : '收入' }}后结余 <span class="font-mono font-semibold tabular-nums">{{ formatMoney(projectedBalance) }}</span></template></template>
+      </p>
       <p v-if="!resourcesLoading && !accounts.length" class="rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
         还没有可用账户，请先前往 <RouterLink to="/admin/personal/accounts" class="font-semibold underline">账户管理</RouterLink> 添加。
       </p>
@@ -74,8 +78,8 @@
 
       <p v-if="formError" role="alert" class="text-sm text-destructive">{{ formError }}</p>
       <div class="flex gap-3 pt-2">
-        <button type="button" class="btn-ghost min-h-11 flex-1" @click="emit('update:modelValue', false)">取消</button>
-        <button class="btn-brand min-h-11 flex-1" :disabled="saving">
+        <button type="button" class="btn-ghost min-h-9 flex-1" @click="emit('update:modelValue', false)">取消</button>
+        <button class="btn-brand min-h-9 flex-1" :disabled="saving">
           {{ saving ? '保存中' : '保存账单' }}
         </button>
       </div>
@@ -87,7 +91,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { billingApi, type BillKind, type PersonalAccount, type PersonalCategory, type PersonalLedger, type PersonalTag } from '../../api/billing'
-import { apiMessage, moneyToCents, toLocalInput } from '../../utils/billing'
+import { apiMessage, formatMoney, loadEntryDefaults, moneyToCents, pickLastUsed, saveEntryDefaults, toLocalInput } from '../../utils/billing'
 import Modal from '../Modal.vue'
 import CategoryPicker from './CategoryPicker.vue'
 import PersonalTagInput from './PersonalTagInput.vue'
@@ -117,6 +121,13 @@ const form = reactive({
   occurred_at: toLocalInput(),
 })
 const currentCategories = computed(() => categories.value.filter(item => item.kind === form.kind).map(item => item.name))
+const selectedAccount = computed(() => accounts.value.find(item => item.id === form.account_id))
+const projectedBalance = computed(() => {
+  const current = selectedAccount.value?.balance_cents || 0
+  const amount = moneyToCents(form.amount)
+  if (!selectedAccount.value || amount <= 0) return current
+  return form.kind === 'income' ? current + amount : current - amount
+})
 
 function resetForm() {
   Object.assign(form, { ledger_id: ledgers.value[0]?.id || 0, account_id: accounts.value[0]?.id || 0, kind: 'expense', amount: '', category: '', tag_ids: [], note: '', occurred_at: toLocalInput() })
@@ -165,6 +176,7 @@ async function save() {
       occurred_at: new Date(form.occurred_at).toISOString(),
       tag_ids: form.tag_ids,
     })
+    saveEntryDefaults('personal', { kind: form.kind, ledger_id: form.ledger_id, account_id: form.account_id, category: form.category })
     emit('update:modelValue', false)
     emit('saved')
   } catch (error) {
@@ -188,8 +200,13 @@ watch(() => props.modelValue, async value => {
     accounts.value = Array.isArray(accountData) ? accountData : accountData?.items || []
     categories.value = Array.isArray(categoryData) ? categoryData : categoryData?.items || []
     tags.value = Array.isArray(tagData) ? tagData : tagData?.items || []
-    form.ledger_id = ledgers.value[0]?.id || 0
-    form.account_id = accounts.value[0]?.id || 0
+    // 默认沿用上次记账的选择，删除过的账本/账户回退到第一项
+    const last = loadEntryDefaults('personal')
+    form.kind = last.kind === 'expense' || last.kind === 'income' ? last.kind : 'expense'
+    form.ledger_id = pickLastUsed(last.ledger_id, ledgers.value.map(item => item.id), ledgers.value[0]?.id || 0)
+    form.account_id = pickLastUsed(last.account_id, accounts.value.map(item => item.id), accounts.value[0]?.id || 0)
+    const sameKindCategories = categories.value.filter(item => item.kind === form.kind).map(item => item.name)
+    form.category = pickLastUsed(last.category, sameKindCategories, '')
   } catch (error) {
     formError.value = apiMessage(error, '账本资料加载失败')
   } finally {

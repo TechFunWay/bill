@@ -39,6 +39,8 @@ export interface PersonalAccount {
   institution: string
   identifier: string
   card_kind?: BankCardKind
+  opening_balance_cents?: number
+  balance_cents?: number
   archived: boolean
   transaction_count?: number
   created_at?: string
@@ -52,6 +54,7 @@ export interface PersonalAccountPayload {
   identifier: string
   card_kind?: BankCardKind
   card_number?: string
+  opening_balance_cents?: number
 }
 
 export interface PersonalAccountOptions {
@@ -97,6 +100,33 @@ export interface PersonalTag {
   name: string
   color?: string
   transaction_count?: number
+}
+
+export type PersonalImportSource = 'alipay' | 'wechat'
+export type PersonalImportRowStatus = 'import' | 'duplicate' | 'skipped'
+
+export interface PersonalImportRow {
+  line: number
+  occurred_at: string
+  kind: BillKind
+  amount_cents: number
+  category: string
+  category_matched: boolean
+  note: string
+  external_id: string
+  status: PersonalImportRowStatus
+  skip_reason: string
+}
+
+export interface PersonalImportParseResult {
+  source: PersonalImportSource
+  total: number
+  rows: PersonalImportRow[]
+}
+
+export interface PersonalImportConfirmPayload {
+  source: PersonalImportSource
+  rows: Array<Pick<PersonalImportRow, 'occurred_at' | 'kind' | 'amount_cents' | 'category' | 'note' | 'external_id'> & { ledger_id: number; account_id: number }>
 }
 
 export interface StatsSummary {
@@ -168,6 +198,8 @@ export interface Balance {
   balance_cents: number
   paid_cents: number
   share_cents: number
+  advanced_cents: number
+  received_cents: number
 }
 
 export interface Transfer {
@@ -209,7 +241,7 @@ export interface LedgerDetail {
   settlements: Settlement[]
   balances: Balance[]
   suggested_transfers: Transfer[] | null
-  totals: { expense_cents: number; income_cents: number; expense_count: number; income_count: number }
+  totals: { expense_cents: number; income_cents: number; balance_cents: number; expense_count: number; income_count: number }
   transactions_total: number
   transactions_page: number
   transactions_page_size: number
@@ -244,6 +276,12 @@ export const billingApi = {
   personalDelete: (id: number) => request.delete(`/api/billing/personal/transactions/${id}`),
   personalStats: (params: Record<string, unknown> = {}) => request.get('/api/billing/personal/stats', { params }),
   personalExport: (params: Record<string, unknown> = {}) => request.get('/api/billing/personal/export', { params, responseType: 'blob' }),
+  personalImportParse: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request.post('/api/billing/personal/import/parse', form)
+  },
+  personalImportConfirm: (data: PersonalImportConfirmPayload) => request.post('/api/billing/personal/import', data),
   personalAccounts: (includeArchived = false) => request.get('/api/billing/personal/accounts', { params: includeArchived ? { include_archived: true } : {} }),
   personalAccountOptions: () => request.get('/api/billing/personal/account-options'),
   personalAccountCreate: (data: PersonalAccountPayload) => request.post('/api/billing/personal/accounts', data),

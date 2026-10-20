@@ -2,6 +2,7 @@ package billing
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -39,11 +40,25 @@ type shareInput struct {
 }
 
 type balanceView struct {
-	UserID       uint   `json:"user_id"`
-	Username     string `json:"username"`
-	BalanceCents int64  `json:"balance_cents"`
-	PaidCents    int64  `json:"paid_cents"`
-	ShareCents   int64  `json:"share_cents"`
+	UserID        uint   `json:"user_id"`
+	Username      string `json:"username"`
+	BalanceCents  int64  `json:"balance_cents"`
+	PaidCents     int64  `json:"paid_cents"`
+	ShareCents    int64  `json:"share_cents"`
+	AdvancedCents int64  `json:"advanced_cents"`
+	ReceivedCents int64  `json:"received_cents"`
+}
+
+// memberBalanceSummary 把成员当前余额转成一句面向用户的说明。
+func memberBalanceSummary(username string, cents int64) string {
+	switch {
+	case cents > 0:
+		return fmt.Sprintf("%s 当前应收 %.2f 元", username, float64(cents)/100)
+	case cents < 0:
+		return fmt.Sprintf("%s 当前应付 %.2f 元", username, float64(-cents)/100)
+	default:
+		return fmt.Sprintf("%s 当前已结清", username)
+	}
 }
 
 type transferView struct {
@@ -70,8 +85,15 @@ func parseOccurredAt(raw string) (time.Time, error) {
 	if raw == "" {
 		return time.Now(), nil
 	}
+	// Bill CSVs carry naive local timestamps, so non-offset layouts must be
+	// parsed in the local zone to keep the stored time matching the display.
 	for _, layout := range []string{time.RFC3339, "2006-01-02T15:04", "2006-01-02"} {
 		if t, err := time.Parse(layout, raw); err == nil {
+			return t, nil
+		}
+	}
+	for _, layout := range []string{"2006-01-02 15:04:05", "2006-01-02T15:04:05", "2006-01-02 15:04"} {
+		if t, err := time.ParseInLocation(layout, raw, time.Local); err == nil {
 			return t, nil
 		}
 	}
@@ -193,9 +215,11 @@ func calculateBalances(db *gorm.DB, ledgerID uint) ([]balanceView, error) {
 			if item.Kind == KindExpense {
 				actor.BalanceCents += item.AmountCents
 				actor.PaidCents += item.AmountCents
+				actor.AdvancedCents += item.AmountCents
 			} else {
 				actor.BalanceCents -= item.AmountCents
 				actor.PaidCents -= item.AmountCents
+				actor.ReceivedCents += item.AmountCents
 			}
 		}
 		var shares []SharedShare

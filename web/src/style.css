@@ -25,8 +25,8 @@ a {
 }
 
 :where(button, a, input, select, textarea):focus-visible {
-  outline: 3px solid rgb(var(--color-brand-500) / 0.45);
-  outline-offset: 2px;
+  outline: 2px solid rgb(var(--color-brand-500) / 0.45);
+  outline-offset: 1px;
 }
 
 html.dark {
@@ -75,29 +75,29 @@ body {
   }
 
   .btn-brand {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-brand-800 px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all duration-200 hover:bg-brand-700 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60 dark:bg-accent dark:text-brand-900 dark:hover:brightness-95;
+    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-brand-800 px-3.5 text-[13px] font-bold text-white shadow-soft transition-all duration-200 hover:bg-brand-700 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-60 dark:bg-accent dark:text-brand-900 dark:hover:brightness-95;
   }
 
   .btn-ghost {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-bold text-foreground transition-all duration-200 hover:border-brand-400 hover:bg-brand-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-muted;
+    @apply inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-border bg-surface px-3.5 text-[13px] font-bold text-foreground transition-all duration-200 hover:border-brand-400 hover:bg-brand-50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-muted;
   }
 
   .input-field {
-    @apply min-h-12 w-full rounded-2xl border border-input bg-surface px-4 py-2.5 text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15;
+    @apply min-h-9 w-full rounded-xl border border-input bg-surface px-3 py-1.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15;
   }
 
   .badge {
-    @apply inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full;
+    @apply inline-flex items-center gap-1 text-[11px] font-semibold leading-4 px-2 py-0.5 rounded-full;
   }
 
   /* Page-level container — uses the full available width so authenticated
      views (especially tables) don't waste space once a sidebar is present. */
   .page-container {
-    @apply min-w-0 w-full space-y-5 sm:space-y-6;
+    @apply min-w-0 w-full space-y-3 sm:space-y-4;
   }
 
   .money-card {
-    @apply surface flex min-h-28 flex-col rounded-[1.25rem] p-4 sm:min-h-36 sm:p-6;
+    @apply surface flex min-h-24 flex-col rounded-[1.25rem] p-3.5 sm:min-h-28 sm:p-4;
   }
 
   .money-card-primary {
@@ -116,19 +116,19 @@ body {
   }
 
   .money-value {
-    @apply mt-2 break-words font-mono text-lg font-semibold tracking-tight tabular-nums sm:mt-3 sm:text-3xl;
+    @apply mt-1.5 break-words font-mono text-base font-semibold tracking-tight tabular-nums sm:mt-2 sm:text-2xl;
   }
 
   .money-meta {
-    @apply mt-auto pt-2 text-[10px] text-muted-foreground sm:text-xs;
+    @apply mt-auto pt-1.5 text-[10px] text-muted-foreground sm:text-xs;
   }
 
   .money-icon {
-    @apply flex h-10 w-10 items-center justify-center rounded-full bg-muted;
+    @apply flex h-9 w-9 items-center justify-center rounded-full bg-muted;
   }
 
   .money-icon svg {
-    @apply h-5 w-5;
+    @apply h-[18px] w-[18px];
   }
 
   .money-card-primary .money-icon {
@@ -138,12 +138,12 @@ body {
 
   .form-field,
   .filter-field {
-    @apply block space-y-1.5;
+    @apply block space-y-1;
   }
 
   .form-field > span,
   .filter-field > span {
-    @apply block text-sm font-semibold text-foreground;
+    @apply block text-[13px] font-semibold text-foreground;
   }
 
   .form-field small {
@@ -163,11 +163,11 @@ body {
   }
 
   .data-table th {
-    @apply border-b border-border bg-muted/55 px-5 py-3 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground;
+    @apply border-b border-border bg-muted/55 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground;
   }
 
   .data-table td {
-    @apply border-b border-border px-5 py-4;
+    @apply border-b border-border px-3 py-2;
   }
 
   .data-table tr:last-child td {
@@ -179,15 +179,15 @@ body {
   }
 
   .icon-button {
-    @apply flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground;
+    @apply flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground;
   }
 
   .icon-button svg {
-    @apply h-5 w-5;
+    @apply h-4 w-4;
   }
 
   .avatar {
-    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-extrabold text-brand-900;
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-[13px] font-extrabold text-brand-900;
   }
 
   .chart-tooltip {
@@ -196,7 +196,7 @@ body {
 
   /* Premium gradient button with a light sweep on hover */
   .btn-premium {
-    @apply relative flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-brand-800 px-4 py-3 font-bold text-white shadow-glow transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 dark:bg-accent dark:text-brand-900;
+    @apply relative flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full bg-brand-800 px-4 py-2.5 font-bold text-white shadow-glow transition-all active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 dark:bg-accent dark:text-brand-900;
   }
   .btn-premium::after {
     content: '';
@@ -243,8 +243,8 @@ body {
   }
 
   .money-card {
-    min-height: 7rem;
-    padding: 1rem;
+    min-height: 6rem;
+    padding: .875rem;
   }
 
   .money-value {
@@ -258,7 +258,19 @@ body {
 
   .btn-brand,
   .btn-ghost {
-    @apply min-h-11 px-4;
+    @apply min-h-10;
+  }
+}
+
+/* Touch devices: keep comfortable tap targets without blowing up desktop density */
+@media (hover: none) and (pointer: coarse) {
+  .icon-button {
+    height: 2.5rem;
+    width: 2.5rem;
+  }
+
+  .input-field {
+    min-height: 2.5rem;
   }
 }
 

@@ -37,7 +37,7 @@ func handleSetupRequired(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
-func handleRegister(db *gorm.DB) gin.HandlerFunc {
+func handleRegister(db *gorm.DB, gatewayPrefix string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req struct {
 			Username string `json:"username" binding:"required"`
@@ -64,11 +64,16 @@ func handleRegister(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// 网关域上 Authorization 头会被飞牛接入层拦截，种 HttpOnly 会话
+		// Cookie 维持登录态（直连端口仍走 JWT，不种）。
+		// 注册流程没有「记住我」选项，JWT 用的是 rememberedLoginTTL，
+		// 所以这里固定传 true 让 Cookie 寿命与令牌一致。
+		issueSessionCookie(c, db, gatewayPrefix, result, true)
 		response.Success(c, result)
 	}
 }
 
-func handleLogin(db *gorm.DB) gin.HandlerFunc {
+func handleLogin(db *gorm.DB, gatewayPrefix string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req struct {
 			Username    string `json:"username" binding:"required"`
@@ -93,6 +98,10 @@ func handleLogin(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// 网关域上 Authorization 头会被飞牛接入层拦截，种 HttpOnly 会话
+		// Cookie 维持登录态（直连端口仍走 JWT，不种）。
+		issueSessionCookie(c, db, gatewayPrefix, result, remember)
+
 		// Populate context so the audit entry is attributed to the logged-in user.
 		if u, ok := result["user"].(map[string]interface{}); ok {
 			if uid, ok := u["id"].(uint); ok {
@@ -115,6 +124,22 @@ func handleCheckAuth(db *gorm.DB) gin.HandlerFunc {
 
 		result := CheckAuth(db, uid, requireLogin)
 		response.Success(c, result)
+	}
+}
+
+// handleLogout 退出登录：飞牛登录只是身份来源，应用会话必须能独立结束
+// （父仓库记忆 fnos-login-session：用户在应用里点退出就该退得掉，不需要退出飞牛）。
+// 会话 Cookie 不分端口（同主机名共享），所以无论请求来自网关 socket 还是直连
+// 端口都要清，防止网关域上的会话残留把人认回去。
+//
+// 审计与 smallgo 基线对齐：登出也留痕（此前只有清 Cookie，审计里看不到登出）。
+func handleLogout(db *gorm.DB, gatewayPrefix string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clearSessionCookie(c, gatewayPrefix)
+		if uid := c.GetUint("userID"); uid > 0 {
+			audit.Log(db, c, "logout", "user", uid, "退出登录")
+		}
+		response.Success(c, map[string]interface{}{"ok": true})
 	}
 }
 
@@ -301,16 +326,17 @@ func handleResetPassword(db *gorm.DB) gin.HandlerFunc {
 }
 
 // RegisterRoutes wires user and authentication routes.
-func RegisterRoutes(publicGroup *gin.RouterGroup, optionalAuthGroup *gin.RouterGroup, authGroup *gin.RouterGroup, adminGroup *gin.RouterGroup, db *gorm.DB) {
+func RegisterRoutes(publicGroup *gin.RouterGroup, optionalAuthGroup *gin.RouterGroup, authGroup *gin.RouterGroup, adminGroup *gin.RouterGroup, db *gorm.DB, gatewayPrefix string) {
 	publicGroup.GET("/auth/setup-required", handleSetupRequired(db))
-	publicGroup.POST("/auth/register", handleRegister(db))
-	publicGroup.POST("/auth/login", handleLogin(db))
+	publicGroup.POST("/auth/register", handleRegister(db, gatewayPrefix))
+	publicGroup.POST("/auth/login", handleLogin(db, gatewayPrefix))
 
 	optionalAuthGroup.GET("/auth/check", handleCheckAuth(db))
 
 	authGroup.GET("/auth/me", handleGetCurrentUser(db))
 	authGroup.PUT("/auth/password", handleChangePassword(db))
 	authGroup.POST("/auth/apikey", handleRegenerateAPIKey(db))
+	authGroup.POST("/auth/logout", handleLogout(db, gatewayPrefix))
 
 	adminGroup.GET("/users", handleGetAllUsers(db))
 	adminGroup.PUT("/users/:id", handleUpdateUser(db))

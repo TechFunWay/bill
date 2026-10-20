@@ -9,7 +9,7 @@
           <div class="flex space-x-3">
             <button
               @click="handleCancel"
-              class="min-h-11 flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              class="min-h-9 flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
             >
               取消
             </button>

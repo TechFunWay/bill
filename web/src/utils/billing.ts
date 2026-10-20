@@ -3,6 +3,8 @@ export const personalIncomeCategories = ['工资', '奖金', '兼职', '理财',
 export const sharedExpenseCategories = ['聚餐', '住宿', '交通', '门票', '采购', '房租', '水电', '活动', '其他']
 export const sharedIncomeCategories = ['退款', '报销', '补贴', '共同收入', '其他']
 
+export type BillKind = 'expense' | 'income'
+
 export function formatMoney(cents: number, currency = 'CNY') {
   return new Intl.NumberFormat('zh-CN', {
     style: 'currency',
@@ -91,4 +93,41 @@ export function formatDate(value: string) {
 
 export function apiMessage(error: any, fallback = '操作失败') {
   return error?.response?.data?.message || fallback
+}
+
+export interface EntryDefaults {
+  kind: BillKind
+  ledger_id: number
+  account_id: number
+  category: string
+}
+
+export type EntryScope = 'personal' | 'shared'
+
+function entryKey(scope: EntryScope) {
+  return `bill_last_entry_${scope}`
+}
+
+export function loadEntryDefaults(scope: EntryScope): Partial<EntryDefaults> {
+  try {
+    const raw = localStorage.getItem(entryKey(scope))
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+export function saveEntryDefaults(scope: EntryScope, entry: EntryDefaults) {
+  try {
+    localStorage.setItem(entryKey(scope), JSON.stringify(entry))
+  } catch {
+    // 存储不可用（隐私模式等）时静默跳过，不影响记账
+  }
+}
+
+/** 上次使用的值仍存在于候选中才采用，否则回退默认值。 */
+export function pickLastUsed<T>(last: unknown, candidates: T[], fallback: T): T {
+  return candidates.includes(last as T) ? (last as T) : fallback
 }

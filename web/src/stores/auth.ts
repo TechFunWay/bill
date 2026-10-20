@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { checkAuth, checkSetupRequired as apiCheckSetupRequired } from '../api/auth'
+import { checkAuth, checkSetupRequired as apiCheckSetupRequired, logout as apiLogout } from '../api/auth'
 import { getPublicConfigs, getUserConfigMeta } from '../api/config'
 import { getSecurityQuestions } from '../api/security'
 import { useThemeStore } from './theme'
@@ -123,7 +123,15 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = newUser
   }
 
-  function logout() {
+  // 退出登录必须通知服务端清会话 Cookie：Cookie 不分端口（同主机名共享），
+  // 只清前端的话，网关域上下一个请求又会把登录态认回来。服务端失败也照常
+  // 清前端并跳登录页——本地退出不能因为网络问题被卡住。
+  async function logout() {
+    try {
+      await apiLogout()
+    } catch {
+      // 忽略：本地登出不依赖服务端结果
+    }
     token.value = ''
     user.value = null
     clearStoredToken()

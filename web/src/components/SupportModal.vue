@@ -1,39 +1,38 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="modelValue" class="fixed inset-0 z-50 flex items-end justify-center lg:items-center lg:p-4" @click.self="close">
+      <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="close">
         <div class="absolute inset-0 bg-black/55" @click="close"></div>
-        <div role="dialog" aria-modal="true" aria-labelledby="support-modal-title" class="modal-panel relative max-h-[92dvh] w-full max-w-sm overflow-auto rounded-t-[1.5rem] bg-surface px-6 pb-6 pt-5 text-center text-foreground shadow-xl lg:max-h-[90vh] lg:rounded-2xl">
-          <button class="icon-button absolute right-3 top-3" aria-label="关闭" @click="close">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        <!-- 精简为一屏展示（mobile-ui 规范 2026-10-01） -->
+        <div role="dialog" aria-modal="true" aria-labelledby="support-modal-title" class="modal-panel relative w-full max-w-[320px] rounded-2xl bg-surface px-5 pb-4 pt-5 text-center text-foreground shadow-xl">
+          <button class="icon-button absolute right-2.5 top-2.5" aria-label="关闭" @click="close">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
 
-          <h3 id="support-modal-title" class="font-display text-xl font-extrabold text-brand-700 dark:text-accent">☕ 请站长喝杯咖啡？</h3>
+          <h3 id="support-modal-title" class="font-display text-base font-extrabold text-brand-700 dark:text-accent">☕ 请站长喝杯咖啡？</h3>
 
-          <div class="mt-3 space-y-1 text-sm leading-6 text-muted-foreground">
-            <p>嘿～看到这里的都是真爱！🎉</p>
-            <p>愿意支持的随意一下，感觉麻烦的直接跳过～</p>
-            <p class="text-xs italic opacity-80">反正我也就随便说说，你也就随便看看 😜</p>
-          </div>
+          <p class="mt-2 text-xs leading-relaxed text-muted-foreground">
+            应用免费无广告、数据保存在本机。若对你有帮助，欢迎赞赏——<strong class="text-foreground">金额随意，1 元也是心意</strong>。
+          </p>
 
-          <div class="my-4 flex justify-center">
+          <div class="my-2.5 flex justify-center">
             <div>
-              <img :src="qrImage" alt="微信收款码" class="h-auto w-[190px] rounded-lg border border-border bg-white object-contain" @error="hideOnError" />
-              <span class="mt-1.5 block text-[13px] text-muted-foreground">微信扫码</span>
+              <img :src="qrImage" alt="微信收款码" class="h-auto w-[150px] rounded-lg border border-border bg-white object-contain" @error="hideOnError" />
+              <span class="mt-1 block text-[11px] text-muted-foreground">微信扫码</span>
             </div>
           </div>
 
-          <div class="mt-4 flex justify-center gap-4 border-t border-border pt-4">
-            <a href="http://techfunway.wycto.cn" target="_blank" rel="noopener noreferrer" class="text-[13px] text-brand-700 underline-offset-2 hover:underline dark:text-accent">🏠 博主首页</a>
-            <a href="http://techfunway.wycto.cn" target="_blank" rel="noopener noreferrer" class="text-[13px] text-brand-700 underline-offset-2 hover:underline dark:text-accent">📖 应用文档</a>
+          <div class="mt-3 flex justify-center gap-3 border-t border-border pt-3">
+            <a href="http://techfunway.wycto.cn" target="_blank" rel="noopener noreferrer" class="text-[11px] text-brand-700 underline-offset-2 hover:underline dark:text-accent">🏠 博主首页</a>
+            <a href="http://techfunway.wycto.cn" target="_blank" rel="noopener noreferrer" class="text-[11px] text-brand-700 underline-offset-2 hover:underline dark:text-accent">📖 应用文档</a>
           </div>
 
           <template v-if="showActions">
-            <p class="mt-3 text-xs leading-5 text-muted-foreground">支付后可点击下方按钮发送一次匿名支持计数（仅设备统计信息，与你的微信账号和支付记录无任何关联）</p>
-            <p v-if="errorText" class="mt-2 text-xs text-rose-500">{{ errorText }}</p>
-            <div class="mt-3 flex justify-center gap-3">
-              <button class="btn-ghost min-h-11 flex-1" @click="close">暂不支持</button>
-              <button class="btn-brand min-h-11 flex-1" :disabled="sending" @click="confirmSupported">{{ sending ? '发送中…' : '❤ 已支持' }}</button>
+            <p class="mt-2.5 text-[11px] leading-4 text-muted-foreground/80">已支付可点「已支持」发送一次匿名计数（与支付记录无关）</p>
+            <p v-if="errorText" class="mt-1.5 text-xs text-rose-500">{{ errorText }}</p>
+            <div class="mt-2.5 flex justify-center gap-2.5">
+              <button class="btn-ghost min-h-9 flex-1 py-2 text-sm" @click="close">暂不支持</button>
+              <button class="btn-brand min-h-9 flex-1 py-2 text-sm" :disabled="sending" @click="confirmSupported">{{ sending ? '发送中…' : '❤ 已支持' }}</button>
             </div>
           </template>
         </div>

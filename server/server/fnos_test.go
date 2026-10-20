@@ -142,3 +142,78 @@ func TestFnOSRoutesDisabledForNormalDeployments(t *testing.T) {
 		t.Fatalf("normal deployment exposed fnOS route: %d", w.Code)
 	}
 }
+
+// TestGatewayLoginSetsSessionCookie：网关域上飞牛登录必须种 HttpOnly 会话
+// Cookie——飞牛网关会拦掉应用自己的 Authorization 头，SPA 留在网关域名下时
+// 只能靠 Cookie 维持登录态（否则刷新即掉登录态）。
+// 注意 bill 的飞牛登录未绑定时返回 binding_required（不自动开通账号），
+// 所以这里走 bind 流程拿到令牌。
+func TestGatewayLoginSetsSessionCookie(t *testing.T) {
+	r, _ := setupFnOSRouter(t)
+	base := "/app/techfunway-bill/api/auth/fnos"
+
+	w := doFnOSRequest(r, base+"/bind", "3000", "cookie-user", map[string]string{
+		"mode": "register", "username": "cookie-user", "password": "secret123",
+	}, true)
+	if w.Code != http.StatusOK {
+		t.Fatalf("飞牛绑定失败: %d %s", w.Code, w.Body.String())
+	}
+	token := decode(t, w)["data"].(map[string]interface{})["token"].(string)
+	if token == "" {
+		t.Fatal("绑定响应里没有令牌")
+	}
+
+	cookies := w.Result().Cookies()
+	var found *http.Cookie
+	for _, ck := range cookies {
+		if ck.Name == "token" {
+			found = ck
+		}
+	}
+	if found == nil {
+		t.Fatalf("网关域登录未种会话 Cookie，实际 Set-Cookie：%v", cookies)
+	}
+	if found.Value != token {
+		t.Fatal("会话 Cookie 的值与登录令牌不一致")
+	}
+	// Path 必须是网关前缀：宿主机内与兄弟应用互不干扰（Cookie 不分端口）。
+	if found.Path != "/app/techfunway-bill" {
+		t.Fatalf("会话 Cookie Path = %q，期望 /app/techfunway-bill", found.Path)
+	}
+	if !found.HttpOnly {
+		t.Fatal("会话 Cookie 必须 HttpOnly")
+	}
+}
+
+// TestGatewayLogoutClearsSessionCookie：退出登录必须在两个 listener 上都清
+// Cookie——Cookie 不分端口（同主机名共享），只清前端的话网关上会被认回去。
+func TestGatewayLogoutClearsSessionCookie(t *testing.T) {
+	r, _ := setupFnOSRouter(t)
+
+	// 先登录拿令牌（账密登录同样要在网关域种 Cookie）。
+	loginBody := map[string]string{"username": "logout-user", "password": "secret123"}
+	w := doFnOSRequest(r, "/app/techfunway-bill/api/auth/register", "", "", loginBody, true)
+	if w.Code != http.StatusOK {
+		t.Fatalf("注册失败: %d %s", w.Code, w.Body.String())
+	}
+	token := decode(t, w)["data"].(map[string]interface{})["token"].(string)
+
+	// 带 Cookie 调登出：应返回清空动作（MaxAge<0 或空值）。
+	req := httptest.NewRequest(http.MethodPost, "/app/techfunway-bill/api/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: "token", Value: token})
+	req = req.WithContext(user.MarkFnOSGateway(req.Context()))
+	res := httptest.NewRecorder()
+	r.ServeHTTP(res, req)
+	if res.Code != http.StatusOK {
+		t.Fatalf("登出失败: %d %s", res.Code, res.Body.String())
+	}
+	var cleared bool
+	for _, ck := range res.Result().Cookies() {
+		if ck.Name == "token" && (ck.MaxAge < 0 || ck.Value == "") {
+			cleared = true
+		}
+	}
+	if !cleared {
+		t.Fatalf("登出未清会话 Cookie，实际 Set-Cookie：%v", res.Result().Cookies())
+	}
+}

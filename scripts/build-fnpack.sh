@@ -13,6 +13,31 @@ GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS="-X smallgo/server/version.Version=${VERSION} -X smallgo/server/version.BuildTime=${BUILD_TIME} -X smallgo/server/version.GitCommit=${GIT_COMMIT} -X smallgo/server/version.AppName=${APP_BINARY}"
 LOCAL_GOCACHE="${GOCACHE:-/tmp/bill-go-build}"
 
+# 可见的桌面主入口必须走统一网关，且必须是 type=url 新页面打开
+# （2026-10-16 改造，与家族标准一致）。应用页面跑在网关域上，飞牛会话同源，
+# 飞牛授权登录零跳转；网关域上应用自身的 Authorization 凭证会被接入层拦截，
+# 登录态由服务端种下的 HttpOnly 会话 Cookie 维持（网关域不发送该头）。
+# 网关另保留一个隐藏入口，供直连端口（旧书签）的访问者走一次性票据跳板。
+python3 - <<'PY'
+import json
+
+with open("fnpack/app/ui/config", encoding="utf-8") as source:
+    config = json.load(source)
+entries = config[".url"]
+main = entries.get("techfunway-bill.main")
+login = entries.get("techfunway-bill.FnOSLogin")
+if not main or main.get("type") != "url":
+    raise SystemExit("fnOS main entry must use type=url (opens in a new page, not an in-desktop window)")
+if main.get("protocol") != "" or main.get("gatewayPrefix") != "/app/techfunway-bill" or main.get("gatewaySocket") != "app.sock":
+    raise SystemExit("fnOS main entry must be a unified-gateway entry (protocol='' + gatewayPrefix + gatewaySocket)")
+if main.get("url") != "/app/techfunway-bill":
+    raise SystemExit("fnOS main entry must land on the gateway-prefixed SPA root")
+if not login or login.get("gatewayPrefix") != "/app/techfunway-bill" or login.get("gatewaySocket") != "app.sock":
+    raise SystemExit("fnOS hidden entry must use the unified gateway")
+if not login.get("noDisplay") or login.get("url") != "/app/techfunway-bill/fnos-entry.html":
+    raise SystemExit("fnOS hidden entry must point to the login trampoline and stay hidden")
+PY
+
 echo "Building frontend..."
 VITE_FNOS_APP=true VITE_BASE_PATH="/app/${FNOS_PKG_NAME}/" npm --prefix web ci
 VITE_FNOS_APP=true VITE_BASE_PATH="/app/${FNOS_PKG_NAME}/" npm --prefix web run build
@@ -36,6 +61,8 @@ fi
 cp fnpack/manifest fnpack/manifest.bak
 
 for ARCH in "amd64" "arm64"; do
+  FILE_ARCH="$ARCH"
+  if [ "$ARCH" = "amd64" ]; then FILE_ARCH="x86"; fi
   echo "Building fnOS package for ${ARCH}..."
 
   echo "  Compiling Go binary (CGO_ENABLED=1, linux/${ARCH})..."
@@ -98,15 +125,15 @@ for ARCH in "amd64" "arm64"; do
 
   # Move the built fpk to release directory
   if [ -f "${BUILD_PACK}/${FNOS_PKG_NAME}.fpk" ]; then
-    mv "${BUILD_PACK}/${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${VERSION}_${ARCH}.fpk"
+    mv "${BUILD_PACK}/${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${VERSION}_${FILE_ARCH}.fpk"
   elif [ -f "${BUILD_PACK}/../${FNOS_PKG_NAME}.fpk" ]; then
-    mv "${BUILD_PACK}/../${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${VERSION}_${ARCH}.fpk"
+    mv "${BUILD_PACK}/../${FNOS_PKG_NAME}.fpk" "${BUILD_DIR}/${FNOS_PKG_NAME}_${VERSION}_${FILE_ARCH}.fpk"
   fi
 
   # Clean up
   rm -rf "${BUILD_PACK}"
 
-  echo "Built ${FNOS_PKG_NAME}_${VERSION}_${ARCH}.fpk"
+  echo "Built ${FNOS_PKG_NAME}_${VERSION}_${FILE_ARCH}.fpk"
 done
 
 # Restore original manifest

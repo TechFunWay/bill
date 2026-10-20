@@ -6,7 +6,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS := -X smallgo/server/version.Version=$(VERSION) -X smallgo/server/version.BuildTime=$(BUILD_TIME) -X smallgo/server/version.GitCommit=$(GIT_COMMIT) -X smallgo/server/version.AppName=$(APP_NAME)
 LOCAL_GOCACHE ?= /tmp/bill-go-build
 
-.PHONY: help dev start build build-frontend build-backend build-linux build-docker build-all fnpack clean
+.PHONY: help dev start build build-frontend build-backend build-linux build-docker build-docker-multi build-all fnpack clean
 
 help:
 	@echo "Usage: make [target]"
@@ -21,6 +21,7 @@ help:
 	@echo "  build-linux     Build for linux/amd64"
 	@echo "  build-docker    Build an offline local image for this Docker architecture"
 	@echo "  build-all       Build for all platforms"
+	@echo "  build-docker-multi  Build multi-arch image (OCI archive, PUSH=1 to push)"
 	@echo "  fnpack          Build fnOS packages"
 	@echo "  clean           Clean build artifacts"
 
@@ -82,6 +83,9 @@ build-docker:
 
 build-all:
 	bash scripts/build-all.sh
+
+build-docker-multi:
+	bash scripts/build-docker-multi.sh
 
 fnpack:
 	bash scripts/build-fnpack.sh

@@ -23,12 +23,20 @@ BUILD_DIR="release/${VERSION}"
 rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
+# Ship the changelog with every release so the version directory is
+# self-contained.
+if [ -f CHANGELOG.md ]; then
+  cp CHANGELOG.md "${BUILD_DIR}/CHANGELOG.md"
+  echo "Copied CHANGELOG.md"
+fi
+
 # Ship the README screenshots with every release so the version directory is
 # self-contained (the tracked source of truth stays docs/screenshots/).
 if [ -d docs/screenshots ]; then
   mkdir -p "${BUILD_DIR}/screenshots"
   cp docs/screenshots/*.png "${BUILD_DIR}/screenshots/"
-  echo "Copied screenshots"
+  (cd "${BUILD_DIR}" && zip -qr "screenshots-${VERSION}.zip" screenshots)
+  echo "Copied screenshots and screenshots-${VERSION}.zip"
 fi
 
 PLATFORMS=(
@@ -63,8 +71,18 @@ for PLATFORM in "${PLATFORMS[@]}"; do
       go build -ldflags "${LDFLAGS} -extldflags -static" -o "${BINARY_NAME}" .
     cd "$ROOT_DIR"
   elif [ "$GOOS" = "windows" ]; then
+    # Windows 也必须开 CGO：SQLite 驱动是 mattn/go-sqlite3，没有纯 Go 实现。交叉
+    # 编译时 CGO_ENABLED 默认是 0，编出来的是官方 stub——程序能启动，但一碰数据库
+    # 就报 "go-sqlite3 requires cgo to work"。v0.1.4 的 windows 包正是这个问题，
+    # 改用 mingw 编真正的 CGO 二进制。
+    if ! command -v x86_64-w64-mingw32-gcc >/dev/null 2>&1; then
+      echo "Error: x86_64-w64-mingw32-gcc not found."
+      echo "Install with: brew install mingw-w64"
+      exit 1
+    fi
     cd server
-    GOCACHE="$LOCAL_GOCACHE" GOOS=$GOOS GOARCH=$GOARCH go build -ldflags "${LDFLAGS}" -o "${BINARY_NAME}.exe" .
+    GOCACHE="$LOCAL_GOCACHE" CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH CC=x86_64-w64-mingw32-gcc \
+      go build -ldflags "${LDFLAGS}" -o "${BINARY_NAME}.exe" .
     cd "$ROOT_DIR"
   else
     cd server
@@ -88,7 +106,7 @@ for PLATFORM in "${PLATFORMS[@]}"; do
   if [ "$GOOS" = "windows" ]; then
     zip -r "${OUTPUT_NAME}.zip" "${OUTPUT_NAME}"
   else
-    tar czf "${OUTPUT_NAME}.tar.gz" "${OUTPUT_NAME}"
+    COPYFILE_DISABLE=1 tar czf "${OUTPUT_NAME}.tar.gz" "${OUTPUT_NAME}"
   fi
   cd "$ROOT_DIR"
 
@@ -103,6 +121,12 @@ done
 # image with Watchtower and is copied as-is.
 sed "s|techfunways/bill:latest|techfunways/bill:${VERSION}|" deploy/docker-compose.yml > "${BUILD_DIR}/docker-compose.yml"
 cp deploy/docker-compose.latest.yml "${BUILD_DIR}/docker-compose.latest.yml"
+# 钉死版本的部署文件（镜像 tag 写死本版本，供稳定部署、不自动升级）。
+if [ -f docker-compose.version.yml ]; then
+  cp docker-compose.version.yml "${BUILD_DIR}/docker-compose.version.yml"
+fi
 echo "Copied docker-compose.yml and docker-compose.latest.yml"
+
+find "${BUILD_DIR}" -name '.DS_Store' -delete 2>/dev/null || true
 
 echo "All builds completed in ${BUILD_DIR}/"

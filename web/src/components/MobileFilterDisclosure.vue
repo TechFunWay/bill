@@ -3,7 +3,7 @@
     <button
       ref="toggleRef"
       type="button"
-      class="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-1 text-left transition-colors duration-200 active:bg-muted/55 lg:hidden"
+      class="flex min-h-10 w-full items-center justify-between gap-3 rounded-xl px-1 text-left transition-colors duration-200 active:bg-muted/55 lg:hidden"
       :aria-expanded="modelValue"
       :aria-controls="panelId"
       @click="emit('update:modelValue', !modelValue)"

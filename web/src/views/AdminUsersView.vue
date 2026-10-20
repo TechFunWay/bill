@@ -62,7 +62,7 @@
               <label class="sr-only" for="admin-user-search">用户名</label>
               <input id="admin-user-search" v-model="search" type="search" placeholder="搜索用户名..." class="input-field !pl-10 lg:w-64" />
             </div>
-            <button class="btn-brand min-h-11 whitespace-nowrap">搜索</button>
+            <button class="btn-brand min-h-9 whitespace-nowrap">搜索</button>
           </form>
         </MobileFilterDisclosure>
       </div>
@@ -142,9 +142,9 @@
             <div class="flex flex-col items-end gap-1"><span :class="user.role === 'admin' ? 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' : 'bg-muted text-muted-foreground'" class="badge">{{ user.role === 'admin' ? '管理员' : '普通用户' }}</span><span :class="user.status === 1 ? 'text-emerald-600' : 'text-rose-600'" class="text-xs font-semibold">{{ user.status === 1 ? '已启用' : '已禁用' }}</span></div>
           </div>
           <div class="mt-2 grid grid-cols-3 gap-2 border-t border-border pt-2">
-            <button class="min-h-11 rounded-xl text-sm font-semibold text-amber-700 active:bg-amber-500/10" @click="handleToggleStatus(user)">{{ user.status === 1 ? '禁用' : '启用' }}</button>
-            <button class="min-h-11 rounded-xl text-sm font-semibold text-brand-700 active:bg-brand-500/10" @click="handleResetPassword(user)">重置密码</button>
-            <button class="min-h-11 rounded-xl text-sm font-semibold text-rose-600 active:bg-rose-500/10" @click="handleDelete(user)">删除</button>
+            <button class="min-h-9 rounded-xl text-sm font-semibold text-amber-700 active:bg-amber-500/10" @click="handleToggleStatus(user)">{{ user.status === 1 ? '禁用' : '启用' }}</button>
+            <button class="min-h-9 rounded-xl text-sm font-semibold text-brand-700 active:bg-brand-500/10" @click="handleResetPassword(user)">重置密码</button>
+            <button class="min-h-9 rounded-xl text-sm font-semibold text-rose-600 active:bg-rose-500/10" @click="handleDelete(user)">删除</button>
           </div>
         </article>
         <div v-if="users.length === 0" class="empty-state min-h-48">暂无用户数据</div>
@@ -155,8 +155,8 @@
           共 <span class="font-semibold text-foreground">{{ total }}</span> 条 · 第 {{ page }} / {{ totalPages }} 页
         </div>
         <div class="flex items-center gap-2">
-          <button @click="prevPage" :disabled="page <= 1" class="btn-ghost min-h-11 !px-3 !py-2">上一页</button>
-          <button @click="nextPage" :disabled="page >= totalPages" class="btn-ghost min-h-11 !px-3 !py-2">下一页</button>
+          <button @click="prevPage" :disabled="page <= 1" class="btn-ghost min-h-9 !px-3 !py-2">上一页</button>
+          <button @click="nextPage" :disabled="page >= totalPages" class="btn-ghost min-h-9 !px-3 !py-2">下一页</button>
         </div>
       </div>
     </div>
@@ -188,6 +188,15 @@
         </div>
       </div>
     </transition>
+
+    <ConfirmDialog
+      v-model="deleteDialogVisible"
+      title="删除用户？"
+      :message="deleteMessage"
+      confirm-text="确认删除"
+      confirm-type="danger"
+      @confirm="confirmDeleteUser"
+    />
   </div>
 </template>
 
@@ -196,6 +205,7 @@ import { ref, computed, onMounted } from 'vue'
 import { getUsers, toggleUserStatus, deleteUser, resetUserPassword } from '../api/user'
 import { passwordValidationError } from '../utils/password'
 import MobileFilterDisclosure from '../components/MobileFilterDisclosure.vue'
+import ConfirmDialog from '../components/ConfirmDialog.vue'
 
 const users = ref<any[]>([])
 const search = ref('')
@@ -268,10 +278,23 @@ async function handleToggleStatus(user: any) {
   } catch {}
 }
 
-async function handleDelete(user: any) {
-  if (!confirm(`确定删除用户 ${user.username}？`)) return
+// 删除用户：走美化确认弹窗，不用浏览器原生 confirm()（父仓库硬性禁令）。
+const deleteDialogVisible = ref(false)
+const deleteTarget = ref<any>(null)
+const deleteMessage = computed(() =>
+  deleteTarget.value ? `确定删除用户 ${deleteTarget.value.username}？删除后该账号无法登录，此操作不可恢复。` : '',
+)
+
+function handleDelete(user: any) {
+  deleteTarget.value = user
+  deleteDialogVisible.value = true
+}
+
+async function confirmDeleteUser() {
+  const target = deleteTarget.value
+  if (!target) return
   try {
-    const res = await deleteUser(user.id)
+    const res = await deleteUser(target.id)
     if (res.data?.code === 0) await loadUsers()
   } catch {}
 }
@@ -308,6 +331,6 @@ async function confirmResetPassword() {
 
 <style scoped>
 .icon-btn {
-  @apply flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors;
+  @apply flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors;
 }
 </style>

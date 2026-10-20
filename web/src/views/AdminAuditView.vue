@@ -7,7 +7,7 @@
             <h2 class="text-lg font-bold text-foreground">操作日志</h2>
             <p class="text-sm text-muted-foreground">追踪系统中的关键操作记录</p>
           </div>
-          <button @click="handleExport" class="btn-ghost min-h-11 shrink-0 !px-3 !py-2">
+          <button @click="handleExport" class="btn-ghost min-h-9 shrink-0 !px-3 !py-2">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             导出
           </button>
@@ -30,7 +30,7 @@
             placeholder="操作 (如 login)"
             class="input-field !py-2"
           />
-            <button class="btn-brand min-h-11 !px-4 !py-2">筛选</button>
+            <button class="btn-brand min-h-9 !px-4 !py-2">筛选</button>
           </form>
         </MobileFilterDisclosure>
       </div>
@@ -100,8 +100,8 @@
           共 <span class="font-semibold text-foreground">{{ total }}</span> 条 · 第 {{ page }} / {{ totalPages }} 页
         </div>
         <div class="flex items-center gap-2">
-          <button @click="prevPage" :disabled="page <= 1" class="btn-ghost min-h-11 !px-3 !py-2">上一页</button>
-          <button @click="nextPage" :disabled="page >= totalPages" class="btn-ghost min-h-11 !px-3 !py-2">下一页</button>
+          <button @click="prevPage" :disabled="page <= 1" class="btn-ghost min-h-9 !px-3 !py-2">上一页</button>
+          <button @click="nextPage" :disabled="page >= totalPages" class="btn-ghost min-h-9 !px-3 !py-2">下一页</button>
         </div>
       </div>
     </div>

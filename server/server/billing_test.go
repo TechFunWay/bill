@@ -453,3 +453,76 @@ func TestSharedLedgerArchiveRestorePaginationAndInvitations(t *testing.T) {
 		t.Fatalf("unexpected shared field settings: %#v", restored)
 	}
 }
+
+func TestSharedSettlementDirectionAndLedgerBalance(t *testing.T) {
+	r, _, _ := setupTestRouter(t)
+	aliceToken := registerUser(t, r, "alice", "secret123")
+	bobToken := registerUser(t, r, "bob", "secret123")
+
+	created := doJSON(r, http.MethodPost, "/api/billing/ledgers", aliceToken, map[string]interface{}{
+		"name": "settle", "usernames": []string{"bob"},
+	})
+	ledgerID := uint(billingData(t, created.Code, created.Body.String())["id"].(float64))
+	ledgerPath := fmt.Sprintf("/api/billing/ledgers/%d", ledgerID)
+	if got := doJSON(r, http.MethodPost, ledgerPath+"/invitations/respond", bobToken, map[string]bool{"accept": true}).Code; got != http.StatusOK {
+		t.Fatalf("accept invitation: %d", got)
+	}
+
+	// Alice 垫付一笔 100 元均分支出:alice +50 应收,bob -50 应付。
+	expense := doJSON(r, http.MethodPost, ledgerPath+"/transactions", aliceToken, map[string]interface{}{
+		"kind": "expense", "actor_user_id": 1, "amount_cents": 100, "category": "聚餐",
+	})
+	if expense.Code != http.StatusOK {
+		t.Fatalf("create expense: %d %s", expense.Code, expense.Body.String())
+	}
+
+	// 应收方 alice 作为付款成员属于方向录反,应被拒绝并提示双方余额。
+	reversed := doJSON(r, http.MethodPost, ledgerPath+"/settlements", bobToken, map[string]interface{}{
+		"from_user_id": 1, "to_user_id": 2, "amount_cents": 50,
+	})
+	if reversed.Code != http.StatusBadRequest {
+		t.Fatalf("reversed settlement = %d, want 400: %s", reversed.Code, reversed.Body.String())
+	}
+	if !strings.Contains(reversed.Body.String(), "alice 当前应收 0.50 元") || !strings.Contains(reversed.Body.String(), "bob 当前应付 0.50 元") {
+		t.Fatalf("reversed settlement message: %s", reversed.Body.String())
+	}
+
+	correct := doJSON(r, http.MethodPost, ledgerPath+"/settlements", bobToken, map[string]interface{}{
+		"from_user_id": 2, "to_user_id": 1, "amount_cents": 50, "note": "微信转账",
+	})
+	if correct.Code != http.StatusOK {
+		t.Fatalf("correct settlement: %d %s", correct.Code, correct.Body.String())
+	}
+
+	// 已结清后余额归零,再录任何方向都应被拒绝。
+	cleared := doJSON(r, http.MethodPost, ledgerPath+"/settlements", bobToken, map[string]interface{}{
+		"from_user_id": 2, "to_user_id": 1, "amount_cents": 10,
+	})
+	if cleared.Code != http.StatusBadRequest || !strings.Contains(cleared.Body.String(), "已结清") {
+		t.Fatalf("settlement on cleared balances = %d %s, want 400 with cleared hint", cleared.Code, cleared.Body.String())
+	}
+
+	detailRecorder := doJSON(r, http.MethodGet, ledgerPath, aliceToken, nil)
+	detail := billingData(t, detailRecorder.Code, detailRecorder.Body.String())
+	totals := detail["totals"].(map[string]interface{})
+	if totals["balance_cents"].(float64) != -100 {
+		t.Fatalf("totals balance_cents = %#v, want -100 (income 0 - expense 100)", totals)
+	}
+	gotBalances := map[string]map[string]float64{}
+	for _, raw := range detail["balances"].([]interface{}) {
+		balance := raw.(map[string]interface{})
+		gotBalances[balance["username"].(string)] = map[string]float64{
+			"balance":         balance["balance_cents"].(float64),
+			"advanced_cents":  balance["advanced_cents"].(float64),
+			"received_cents": balance["received_cents"].(float64),
+		}
+	}
+	alice := gotBalances["alice"]
+	bob := gotBalances["bob"]
+	if alice["balance"] != 0 || bob["balance"] != 0 {
+		t.Fatalf("balances after settlement = %#v, want both 0", gotBalances)
+	}
+	if alice["advanced_cents"] != 100 || alice["received_cents"] != 0 || bob["advanced_cents"] != 0 {
+		t.Fatalf("handled amounts = %#v, want alice advanced 100", gotBalances)
+	}
+}

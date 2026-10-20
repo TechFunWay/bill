@@ -30,7 +30,7 @@
         role="option"
         :aria-selected="bank.name === modelValue"
         :class="index === activeIndex ? 'bg-muted' : ''"
-        class="flex min-h-12 w-full touch-manipulation items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted focus-visible:bg-muted"
+        class="flex min-h-10 w-full touch-manipulation items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted focus-visible:bg-muted"
         @mousedown.prevent
         @mouseenter="activeIndex = index"
         @click="select(bank)"

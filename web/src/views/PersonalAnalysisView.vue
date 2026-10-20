@@ -22,7 +22,7 @@
           <span>结束日期</span>
           <input v-model="filters.end" type="date" class="input-field" />
         </label>
-        <button class="btn-brand min-h-11 self-end xl:min-w-28" :disabled="loading">
+        <button class="btn-brand min-h-9 self-end xl:min-w-28" :disabled="loading">
           <svg v-if="loading" class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3"/><path class="opacity-75" d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-linecap="round" stroke-width="3"/></svg>
           {{ loading ? '统计中' : '应用筛选' }}
         </button>
